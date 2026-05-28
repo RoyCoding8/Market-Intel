@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: market-intel-backend
+    runtime: python
+    buildCommand: pip install uv && uv sync --frozen
+    startCommand: uvicorn backend.main:create_app --factory --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: LLM_MODEL
+        value: openai/gpt-4o
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_API_BASE
+        sync: false
+      - key: BRIGHT_DATA_CUSTOMER_ID
+        sync: false
+      - key: BRIGHT_DATA_ZONE
+        sync: false
+      - key: BRIGHT_DATA_PASSWORD
+        sync: false
+      - key: BRIGHT_DATA_DEBUG
+        value: "false"
+      - key: BRIGHT_DATA_VERIFY_SSL
+        value: "true"
+      - key: DATABASE_URL
+        value: sqlite:///./data/market_intel.db
+      - key: CORS_ORIGINS
+        value: https://market-intel-frontend.onrender.com
+    disk:
+      name: market-intel-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+    healthCheckPath: /api/health
+
+  - type: web
+    name: market-intel-frontend
+    runtime: node
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://market-intel-backend.onrender.com

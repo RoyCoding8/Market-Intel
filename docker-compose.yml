@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: market-intel-backend
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - LLM_MODEL=${LLM_MODEL:-openai/gpt-4o}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_BASE=${OPENAI_API_BASE}
+      - BRIGHT_DATA_CUSTOMER_ID=${BRIGHT_DATA_CUSTOMER_ID}
+      - BRIGHT_DATA_ZONE=${BRIGHT_DATA_ZONE}
+      - BRIGHT_DATA_PASSWORD=${BRIGHT_DATA_PASSWORD}
+      - BRIGHT_DATA_COUNTRY=${BRIGHT_DATA_COUNTRY}
+      - BRIGHT_DATA_DEBUG=${BRIGHT_DATA_DEBUG:-false}
+      - BRIGHT_DATA_CA_CERT=${BRIGHT_DATA_CA_CERT}
+      - BRIGHT_DATA_VERIFY_SSL=${BRIGHT_DATA_VERIFY_SSL:-false}
+      - DATABASE_URL=sqlite:///./data/market_intel.db
+      - CORS_ORIGINS=http://localhost:3000
+    env_file:
+      - .env
+    volumes:
+      - backend-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - market-intel
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    container_name: market-intel-frontend
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - market-intel
+
+volumes:
+  backend-data:
+    driver: local
+
+networks:
+  market-intel:
+    driver: bridge
