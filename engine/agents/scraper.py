@@ -229,9 +229,7 @@ def _parse_page(html: str, base_url: str = "") -> tuple[str, Optional[str], dict
         soup = BeautifulSoup(html, "lxml")
     except Exception:
         soup = BeautifulSoup(html, "html.parser")
-    # Title
     title = soup.title.string.strip() if soup.title and soup.title.string else None
-    # Metadata
     metadata: dict[str, Optional[str]] = {"description": None, "og_image": None, "canonical_url": None}
     desc_tag = soup.find("meta", attrs={"name": "description"})
     if desc_tag and desc_tag.get("content"):
@@ -242,7 +240,6 @@ def _parse_page(html: str, base_url: str = "") -> tuple[str, Optional[str], dict
     canonical_tag = soup.find("link", attrs={"rel": "canonical"})
     if canonical_tag and canonical_tag.get("href"):
         metadata["canonical_url"] = canonical_tag["href"].strip()
-    # Links
     links: list[str] = []
     if base_url:
         parsed_base = urlparse(base_url)
@@ -261,7 +258,6 @@ def _parse_page(html: str, base_url: str = "") -> tuple[str, Optional[str], dict
             if clean not in seen:
                 seen.add(clean)
                 links.append(clean)
-    # Clean text (destructive — do last)
     for tag in soup(["script", "style", "noscript", "iframe", "svg", "nav", "footer", "header"]):
         tag.decompose()
     text = soup.get_text(separator="\n", strip=True)
@@ -306,8 +302,16 @@ def _prioritize_links(links: list[str], focus_areas: list[str], max_pages: int) 
     return sorted(links, key=_priority)[:max_pages]
 
 
-def _detect_anti_bot(html: str, status_code: int) -> Optional[str]:
-    """Detect common anti-bot patterns. Returns description or None."""
+def _detect_anti_bot(html: str, status_code: int, *, via_proxy: bool = False) -> Optional[str]:
+    """Detect common anti-bot patterns. Returns description or None.
+
+    When via_proxy=True (Bright Data Web Unlocker), detection is skipped
+    entirely. The proxy has already handled anti-bot challenges — if it
+    returned content, we trust it.
+    """
+    if via_proxy:
+        return None
+
     html_lower = html.lower()
     cloudflare_markers = [
         "cf-browser-verification", "cloudflare", "checking your browser",
@@ -447,7 +451,6 @@ async def _fetch_page(
     headers = {"User-Agent": random.choice(_USER_AGENTS)}
     async with client.stream("GET", url, headers=headers, timeout=timeout, follow_redirects=True) as resp:
         resp.raise_for_status()
-        # SSRF defense: re-validate final URL after redirects
         final_url = str(resp.url)
         if final_url != url:
             from contracts.api import CompetitorInput
@@ -455,11 +458,9 @@ async def _fetch_page(
                 CompetitorInput.validate_url.__func__(CompetitorInput, final_url)
             except ValueError as e:
                 raise ValueError(f"Redirect to blocked URL: {final_url} ({e})")
-        # Reject non-HTML content early (binary, JSON, images, etc.)
         ct = resp.headers.get("content-type", "")
         if ct and not any(t in ct.lower() for t in ("text/html", "text/plain", "application/xhtml", "text/")):
             raise ValueError(f"Non-HTML content-type: {ct}")
-        # Fast path: reject by Content-Length before downloading
         cl = resp.headers.get("content-length")
         if cl:
             try:
@@ -468,7 +469,6 @@ async def _fetch_page(
                 content_length = None
             if content_length and content_length > MAX_BODY_BYTES:
                 raise ValueError(f"Response too large: {content_length} bytes")
-        # Stream with size limit — abort if body exceeds max
         body = b""
         async for chunk in resp.aiter_bytes(8192):
             body += chunk
@@ -535,8 +535,7 @@ async def scrape_competitor(
         elif not homepage_url.startswith(("http://", "https://")):
             raise ValueError(f"Unsupported URL scheme: {homepage_url}")
 
-        # SSRF defense: re-resolve DNS and verify IPs before fetching
-        # to close the TOCTOU window between URL validation and actual request.
+        # Re-resolve DNS to close TOCTOU window between URL validation and fetch
         parsed_check = urlparse(homepage_url)
         hostname_check = (parsed_check.hostname or "").lower().rstrip(".")
         if hostname_check:
@@ -566,7 +565,6 @@ async def scrape_competitor(
                     metadata=result_metadata,
                 )
 
-            # Check robots.txt for homepage
             if robots_parser and not robots_parser.can_fetch("*", homepage_url):
                 robots_respected = False
                 errors.append(f"Blocked by robots.txt: {homepage_url}")
@@ -576,8 +574,7 @@ async def scrape_competitor(
                 homepage_fetch = await _fetch_page(client, homepage_url)
                 visited.add(homepage_url)
 
-                # Anti-bot detection + single-pass parse
-                anti_bot = _detect_anti_bot(homepage_fetch.html, homepage_fetch.status_code)
+                anti_bot = _detect_anti_bot(homepage_fetch.html, homepage_fetch.status_code, via_proxy=bright_data_config is not None)
                 if anti_bot:
                     errors.append(f"Anti-bot detected on homepage: {anti_bot}")
                     logger.warning("Anti-bot detected on %s: %s", homepage_url, anti_bot)
@@ -597,7 +594,6 @@ async def scrape_competitor(
                 ))
 
                 if not anti_bot:
-                    # Prioritize discovered links by focus areas
                     prioritized = _prioritize_links(links, request.focus_areas, request.max_pages - 1)
 
                     for link in prioritized:
@@ -618,7 +614,7 @@ async def scrape_competitor(
                             attempted += 1
                             fetch = await _fetch_page(client, link)
 
-                            anti_bot = _detect_anti_bot(fetch.html, fetch.status_code)
+                            anti_bot = _detect_anti_bot(fetch.html, fetch.status_code, via_proxy=bright_data_config is not None)
                             if anti_bot:
                                 errors.append(f"Anti-bot detected: {anti_bot} at {link}")
                                 logger.warning("Anti-bot detected on %s: %s", link, anti_bot)
@@ -628,7 +624,6 @@ async def scrape_competitor(
                             clean_text = _truncate_content(clean_text)
                             metadata.update(_bright_data_metadata(bright_data_config, fetch.headers))
 
-                            # Deduplicate by content hash
                             c_hash = _content_hash(clean_text)
                             if c_hash in seen_hashes:
                                 logger.info("Skipping duplicate page: %s", link)
@@ -667,7 +662,6 @@ async def scrape_competitor(
             logger.error(msg)
             errors.append(msg)
 
-    # Derive competitor name from domain
     parsed = urlparse(homepage_url)
     competitor_name = parsed.netloc.replace("www.", "").split(".")[0].capitalize()
 

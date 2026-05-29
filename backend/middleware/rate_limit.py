@@ -69,8 +69,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self._trusted = _trusted_proxies()
 
     def _client_ip(self, request: Request) -> str:
-        # When behind a trusted reverse proxy, use X-Forwarded-For for the real client IP.
-        # Otherwise, use the direct connection IP to prevent spoofing.
         direct_ip = request.client.host if request.client else None
         if direct_ip and direct_ip in self._trusted:
             forwarded = request.headers.get("x-forwarded-for")

@@ -34,6 +34,14 @@ def _llm_configured() -> bool:
     return any(os.getenv(var) for var in _PROVIDER_KEY_VARS)
 
 
+def _bright_data_configured() -> bool:
+    """Return True if all three Bright Data credentials are set."""
+    return all(
+        os.getenv(var, "").strip()
+        for var in ("BRIGHT_DATA_CUSTOMER_ID", "BRIGHT_DATA_ZONE", "BRIGHT_DATA_PASSWORD")
+    )
+
+
 @router.get("/api/health", response_model=HealthResponse)
 async def health_check(request: Request) -> HealthResponse:
     """Liveness / readiness probe.
@@ -47,6 +55,7 @@ async def health_check(request: Request) -> HealthResponse:
         status="ok",
         version=request.app.version,
         llm_configured=_llm_configured(),
+        bright_data_configured=_bright_data_configured(),
         scheduler_running=scheduler.running,
         active_jobs=sum(1 for r in records if r.status.value not in {"completed", "failed", "cancelled"}),
         total_jobs_completed=sum(1 for r in records if r.status.value == "completed"),

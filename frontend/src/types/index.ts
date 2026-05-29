@@ -3,7 +3,6 @@
  * Keep in sync with the Python contracts.
  */
 
-// ── Enums ────────────────────────────────────────────────────────────────
 
 export type JobStatus =
   | "pending"
@@ -21,7 +20,6 @@ export type ScheduleFrequency = "once" | "hourly" | "daily" | "weekly" | "custom
 
 export type ExportFormat = "json" | "csv" | "markdown" | "pdf";
 
-// ── Competitor ───────────────────────────────────────────────────────────
 
 export interface CompetitorInput {
   url: string;
@@ -97,7 +95,6 @@ export interface CompetitorData {
   last_updated: string;
 }
 
-// ── Citation & Confidence ────────────────────────────────────────────────
 
 export interface Citation {
   url: string;
@@ -107,7 +104,6 @@ export interface Citation {
   confidence: ConfidenceLevel;
 }
 
-// ── Findings ─────────────────────────────────────────────────────────────
 
 export interface Finding {
   id: string;
@@ -135,7 +131,6 @@ export interface ComparisonTable {
   competitor_ids: string[];
 }
 
-// ── Report ───────────────────────────────────────────────────────────────
 
 export interface IntelligenceReport {
   id: string;
@@ -151,7 +146,6 @@ export interface IntelligenceReport {
   verification_passes: number;
 }
 
-// ── API Request/Response ─────────────────────────────────────────────────
 
 export interface ScheduleConfig {
   frequency: ScheduleFrequency;
@@ -197,12 +191,12 @@ export interface HealthResponse {
   status: string;
   version: string;
   llm_configured: boolean;
+  bright_data_configured: boolean;
   scheduler_running: boolean;
   active_jobs: number;
   total_jobs_completed: number;
 }
 
-// ── Job Cancellation ─────────────────────────────────────────────────────
 
 export interface CancelJobResponse {
   job_id: string;
@@ -210,7 +204,6 @@ export interface CancelJobResponse {
   message: string;
 }
 
-// ── Export ───────────────────────────────────────────────────────────────
 
 export interface ExportRequest {
   format: ExportFormat;
@@ -225,7 +218,6 @@ export interface ExportResponse {
   download_url?: string;
 }
 
-// ── Scheduled Jobs ───────────────────────────────────────────────────────
 
 export interface ScheduledJobResponse {
   schedule_id: string;
@@ -250,7 +242,6 @@ export interface UpdateScheduleRequest {
   cron_expression?: string;
 }
 
-// ── Dashboard Analytics ─────────────────────────────────────────────────
 
 export interface DashboardStats {
   total_jobs: number;
@@ -278,7 +269,6 @@ export interface TrendResponse {
   data_points: TrendDataPoint[];
 }
 
-// ── Error Response ───────────────────────────────────────────────────────
 
 export interface ErrorResponse {
   error: string;
@@ -286,7 +276,6 @@ export interface ErrorResponse {
   status_code: number;
 }
 
-// ── SSE Events ───────────────────────────────────────────────────────────
 
 export type EventType =
   | "job.started"

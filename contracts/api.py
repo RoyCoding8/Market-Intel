@@ -13,7 +13,6 @@ from urllib.parse import urlparse
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-# ── Enums ──────────────────────────────────────────────────────────────────
 
 class JobStatus(str, Enum):
     PENDING = "pending"
@@ -45,7 +44,6 @@ class ExportFormat(str, Enum):
     PDF = "pdf"
 
 
-# ── Competitor ─────────────────────────────────────────────────────────────
 
 class CompetitorInput(BaseModel):
     url: str = Field(..., description="Competitor website URL", max_length=2048)
@@ -101,19 +99,16 @@ class CompetitorInput(BaseModel):
         if hostname in {"metadata.google.internal", "instance-data"}:
             raise ValueError("Requests to cloud metadata endpoints are not allowed")
 
-        # Block bare localhost
         if hostname == "localhost":
             raise ValueError("Requests to localhost are not allowed")
 
-        # Check if hostname is a raw IP (literal) — block octal/hex bypasses
-        # urlparse may return octal IPs like "0177.0.0.1" which ipaddress rejects
-        # but socket resolves to 127.0.0.1. We detect octal/hex patterns directly.
+        # Block octal/hex IP bypasses (e.g. 0177.0.0.1, 0x7f.0x00.0x00.0x01)
         if re.match(r"^(0\d+\.|0x[0-9a-f]+\.)(\d+\.){2}\d+$", hostname, re.IGNORECASE):
             raise ValueError(f"Requests to non-canonical IP addresses are not allowed ({hostname})")
         if re.match(r"^0x[0-9a-f]+(\.0x[0-9a-f]+){3}$", hostname, re.IGNORECASE):
             raise ValueError(f"Requests to non-canonical IP addresses are not allowed ({hostname})")
 
-        # If hostname is a literal IP, check it directly
+        # If hostname is a literal IP, check against blocked ranges
         try:
             ip = ipaddress.ip_address(hostname)
             reason = cls._is_blocked_ip(str(ip))
@@ -122,12 +117,10 @@ class CompetitorInput(BaseModel):
         except ValueError as e:
             if "not allowed" in str(e) or "non-canonical" in str(e):
                 raise
-            # Not a literal IP — continue to DNS resolution check below
             if "." not in hostname and ":" not in hostname:
                 raise ValueError(f"Invalid hostname: {hostname!r} (must be a valid domain or IP)")
 
-        # DNS resolution check — blocks wildcard DNS (nip.io, sslip.io, etc.)
-        # Resolve the hostname and check all resolved IPs
+        # DNS resolution — blocks wildcard DNS (nip.io, sslip.io, etc.)
         try:
             addrinfos = socket.getaddrinfo(hostname, None, proto=socket.IPPROTO_TCP)
             for family, _, _, _, sockaddr in addrinfos:
@@ -136,8 +129,6 @@ class CompetitorInput(BaseModel):
                 if reason:
                     raise ValueError(reason)
         except socket.gaierror:
-            # DNS resolution failed — hostname doesn't resolve, allow it through
-            # (the scraper will fail with a network error, which is fine)
             pass
 
         return v
@@ -213,7 +204,6 @@ class CompetitorData(BaseModel):
     last_updated: datetime
 
 
-# ── Citation & Confidence ─────────────────────────────────────────────────
 
 class Citation(BaseModel):
     url: str
@@ -223,7 +213,6 @@ class Citation(BaseModel):
     confidence: ConfidenceLevel
 
 
-# ── Findings ──────────────────────────────────────────────────────────────
 
 class Finding(BaseModel):
     id: str
@@ -249,7 +238,6 @@ class ComparisonTable(BaseModel):
     competitor_ids: list[str]
 
 
-# ── Report ────────────────────────────────────────────────────────────────
 
 class IntelligenceReport(BaseModel):
     id: str
@@ -265,7 +253,6 @@ class IntelligenceReport(BaseModel):
     verification_passes: int = 0
 
 
-# ── API Request/Response ──────────────────────────────────────────────────
 
 class ScheduleConfig(BaseModel):
     frequency: ScheduleFrequency
@@ -308,12 +295,12 @@ class JobListResponse(BaseModel):
     total: int
 
 
-# ── Health ────────────────────────────────────────────────────────────────
 
 class HealthResponse(BaseModel):
     status: str = "ok"
     version: str = "0.3.0"
     llm_configured: bool = False
+    bright_data_configured: bool = False
     scheduler_running: bool = False
     active_jobs: int = 0
     total_jobs_completed: int = 0
@@ -324,7 +311,6 @@ class CancelJobResponse(BaseModel):
     message: str
 
 
-# ── Export ────────────────────────────────────────────────────────────────
 
 class ExportRequest(BaseModel):
     format: ExportFormat
@@ -338,7 +324,6 @@ class ExportResponse(BaseModel):
     download_url: Optional[str] = None
 
 
-# ── Scheduled Jobs ────────────────────────────────────────────────────────
 
 class ScheduledJobResponse(BaseModel):
     schedule_id: str
@@ -361,7 +346,6 @@ class UpdateScheduleRequest(BaseModel):
     cron_expression: Optional[str] = None
 
 
-# ── Dashboard Analytics ──────────────────────────────────────────────────
 
 class DashboardStats(BaseModel):
     total_jobs: int = 0
@@ -387,7 +371,6 @@ class TrendResponse(BaseModel):
     data_points: list[TrendDataPoint]
 
 
-# ── Error Response ────────────────────────────────────────────────────────
 
 class ErrorResponse(BaseModel):
     error: str

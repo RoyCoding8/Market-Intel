@@ -37,12 +37,10 @@ export class ApiError extends Error {
 
 /** Human-friendly error messages by HTTP status. */
 function friendlyMessage(status: number, body: string): string {
-  // Try to parse ErrorResponse from body
   try {
     const parsed = JSON.parse(body) as ErrorResponse;
     if (parsed.error) return parsed.error;
   } catch {
-    // not JSON, use raw body
   }
 
   switch (status) {
@@ -80,7 +78,6 @@ async function request<T>(
       ...options,
     });
   } catch (err) {
-    // Network error — backend is unreachable
     const msg =
       err instanceof TypeError && err.message.includes("fetch")
         ? "Backend not running. Start with: docker-compose up or python -m backend.main"
@@ -111,7 +108,6 @@ async function request<T>(
   return JSON.parse(text) as T;
 }
 
-// ── Jobs ──────────────────────────────────────────────────────────────────
 
 export async function createJob(
   payload: CreateJobRequest
@@ -154,13 +150,11 @@ export async function exportReport(
   });
 }
 
-// ── Health ────────────────────────────────────────────────────────────────
 
 export async function getHealth(): Promise<HealthResponse> {
   return request<HealthResponse>("/api/health");
 }
 
-// ── Dashboard Analytics ──────────────────────────────────────────────────
 
 export async function getStats(): Promise<DashboardStats> {
   return request<DashboardStats>("/api/stats");
@@ -175,7 +169,6 @@ export async function getTrends(
   );
 }
 
-// ── Scheduled Jobs ───────────────────────────────────────────────────────
 
 export async function listSchedules(): Promise<ScheduledJobListResponse> {
   return request<ScheduledJobListResponse>("/api/schedules");

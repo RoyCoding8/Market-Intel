@@ -115,7 +115,6 @@ class Database:
             raise RuntimeError("Database failed to initialize")
         return self._db
 
-    # ── Jobs ─────────────────────────────────────────────────────────────
 
     async def create_job(self, job_id: str, request: CreateJobRequest) -> None:
         db = await self._connection()
@@ -190,7 +189,6 @@ class Database:
                 logger.warning("Corrupted report_json for job %s: %s", job_id, exc)
                 return None
 
-    # ── Events ───────────────────────────────────────────────────────────
 
     async def save_event(
         self,
@@ -222,7 +220,6 @@ class Database:
             rows = await cursor.fetchall()
             return [dict(r) for r in rows]
 
-    # ── Dashboard ────────────────────────────────────────────────────────
 
     async def get_dashboard_stats(self) -> DashboardStats:
         db = await self._connection()
@@ -244,7 +241,6 @@ class Database:
             row = await cur.fetchone()
             total_findings, total_pages_scraped = row[0], row[1]
 
-        # Walk report_json for detailed metrics
         high_confidence = total_verifications = 0
         total_confidence = 0.0
         confidence_count = 0
@@ -266,7 +262,6 @@ class Database:
         seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
         jobs_last_7_days = await _scalar("SELECT COUNT(*) FROM jobs WHERE created_at >= ?", (seven_days_ago,))
 
-        # Top competitors from request_json
         competitor_map: dict[str, dict] = {}
         async with db.execute("SELECT request_json FROM jobs") as cur:
             async for row in cur:
@@ -324,7 +319,6 @@ class Database:
         async with db.execute(sql, params) as cur:
             return [TrendDataPoint(date=r[0], value=float(r[1] or 0)) async for r in cur]
 
-    # ── Schedules ────────────────────────────────────────────────────────
 
     async def create_schedule(
         self,

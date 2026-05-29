@@ -64,7 +64,6 @@ export function connectJobStream(
   function dispatch(e: MessageEvent) {
     try {
       const event: AgentEvent = JSON.parse(e.data);
-      // Skip heartbeats — they just keep the connection alive
       if (event.event_type === "heartbeat") return;
       onEvent(event);
     } catch (err) {
@@ -72,19 +71,14 @@ export function connectJobStream(
     }
   }
 
-  // Register a listener for every known event type so named events
-  // from sse-starlette are not silently dropped.
   for (const eventType of ALL_EVENT_TYPES) {
     es.addEventListener(eventType, dispatch as EventListener);
   }
 
-  // Fallback: unnamed events still go through onmessage
   es.onmessage = dispatch;
 
   es.onerror = (e: Event) => {
     if (closed) return;
-    // EventSource auto-reconnects on transient errors.
-    // Only close and notify on readyState CLOSED (permanent failure).
     if (es.readyState === EventSource.CLOSED) {
       console.warn("[SSE] Connection permanently closed for job", jobId);
       closed = true;

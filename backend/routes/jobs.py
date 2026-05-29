@@ -113,25 +113,13 @@ class _JobProgressEmitter:
             await self._job_mgr.set_error(event.job_id, event.message)
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────
-
-
 def _report_output_to_intelligence_report(
     job_id: str,
     report_output: ReportOutput,
     competitor_urls: list[str],
     verification_passes: int = 0,
 ) -> IntelligenceReport:
-    """Convert an engine ReportOutput into an API IntelligenceReport.
-
-    Args:
-        job_id: The job ID.
-        report_output: The engine's ReportOutput.
-        competitor_urls: List of competitor URLs from the pipeline context.
-
-    Returns:
-        IntelligenceReport suitable for saving and API responses.
-    """
+    """Convert an engine ReportOutput into an API IntelligenceReport."""
     from datetime import datetime, timezone
 
     from contracts.api import ComparisonTable, ComparisonRow
@@ -199,10 +187,8 @@ async def _run_job_background(
 
     async with semaphore:
         try:
-            # Mark running
             await job_mgr.update_status(job_id, JobStatus.SCRAPING)
 
-            # Run the engine pipeline with cancellation support and timeout
             engine_emitter = _JobProgressEmitter(job_mgr, event_store)
             coro = run_pipeline(
                 ctx, engine_emitter,
@@ -221,14 +207,12 @@ async def _run_job_background(
             else:
                 report_output = await coro
 
-            # Check if the job was cancelled while running
             if job_mgr.is_cancelled(job_id):
                 await _emit(event_store, job_id, EventType.JOB_CANCELLED, "Job cancelled during pipeline execution")
             elif ctx.state == PipelineState.ERROR:
                 await job_mgr.set_error(job_id, report_output.executive_summary)
                 await _emit(event_store, job_id, EventType.JOB_FAILED, report_output.executive_summary)
             else:
-                # Convert ReportOutput to IntelligenceReport and save it
                 if report_output is not None:
                     intel_report = _report_output_to_intelligence_report(
                         job_id, report_output, ctx.competitor_urls,
@@ -236,13 +220,11 @@ async def _run_job_background(
                     )
                     await job_mgr.set_report(job_id, intel_report)
 
-                # Mark completed
                 await job_mgr.update_status(job_id, JobStatus.COMPLETED)
                 await job_mgr.update_progress(job_id, progress=1.0, current_step="completed")
                 await _emit(event_store, job_id, EventType.JOB_COMPLETED, "Job completed")
         except Exception as exc:
             logger.exception("Pipeline failed for job %s", job_id)
-            # Sanitize: don't leak internal details to API consumers
             error_msg = f"Pipeline failed: {type(exc).__name__}"
             await job_mgr.set_error(job_id, error_msg)
             await _emit(event_store, job_id, EventType.JOB_FAILED, error_msg)

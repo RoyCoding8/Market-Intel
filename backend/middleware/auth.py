@@ -32,15 +32,12 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
         self._api_key: str | None = os.getenv("API_KEY") or None
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        # No key configured → open access.
         if self._api_key is None:
             return await call_next(request)
 
-        # Always let through health probes and CORS preflight.
         if request.url.path in _PUBLIC_PATHS or request.method == "OPTIONS":
             return await call_next(request)
 
-        # Accept key from header or query string.
         supplied = (
             request.headers.get("x-api-key")
             or request.query_params.get("api_key")

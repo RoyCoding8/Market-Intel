@@ -36,7 +36,6 @@ interface JobStore {
   cancelActiveJob: () => Promise<void>;
   clearActive: () => void;
 
-  // SSE connection
   _sseConnection: ReturnType<typeof connectJobStream> | null;
   connectSSE: (jobId: string) => void;
   disconnectSSE: () => void;
@@ -72,8 +71,6 @@ export const useJobStore = create<JobStore>((set, get) => ({
   createJob: async (payload: CreateJobRequest) => {
     const wasDemo = get().isDemoMode;
     set({ isLoading: true, error: null, isDemoMode: false });
-
-    // Clear old SSE if any
     get().disconnectSSE();
 
     try {
@@ -95,7 +92,6 @@ export const useJobStore = create<JobStore>((set, get) => ({
         isLoading: false,
       });
 
-      // Connect SSE for real-time events
       get().connectSSE(jobId);
       void get().fetchJobs();
 
@@ -131,22 +127,17 @@ export const useJobStore = create<JobStore>((set, get) => ({
       error: null,
       isDemoMode: false,
     });
-    // Fetch latest status + connect SSE
     getJobStatus(jobId)
       .then((status) => set({ jobStatus: status }))
-      .catch(() => {
-        // Keep the console available even if the status endpoint is temporarily unavailable.
-      });
+      .catch(() => {});
     get().fetchReport(jobId);
     get().connectSSE(jobId);
   },
 
   addEvent: (event: AgentEvent) => {
-    // Dedup by event_id — skip if already present
     if (get().events.some((e) => e.event_id && e.event_id === event.event_id)) return;
     set((state) => ({ events: [...state.events, event] }));
 
-    // Auto-update job status from events
     const statusUpdate: Partial<JobStatusResponse> = {};
     if (event.event_type === "job.completed") {
       statusUpdate.status = "completed";
@@ -218,7 +209,6 @@ export const useJobStore = create<JobStore>((set, get) => ({
       }));
     }
 
-    // Auto-fetch report on completion
     if (event.event_type === "report.generated" || event.event_type === "job.completed") {
       const { activeJobId } = get();
       if (activeJobId) {
@@ -252,7 +242,6 @@ export const useJobStore = create<JobStore>((set, get) => ({
       const res = await listJobs();
       set({ jobs: res.jobs });
     } catch {
-      // Silently fail — might be no backend yet
     }
   },
 
@@ -261,7 +250,6 @@ export const useJobStore = create<JobStore>((set, get) => ({
       const res = await getReport(jobId);
       set({ report: res.report });
     } catch {
-      // Report not ready yet or backend unavailable
     }
   },
 
@@ -302,9 +290,7 @@ export const useJobStore = create<JobStore>((set, get) => ({
     const conn = connectJobStream(
       jobId,
       (event) => get().addEvent(event),
-      () => {
-        // SSE error handled internally
-      },
+      () => {},
       () => {
         set({ _sseConnection: null });
       }

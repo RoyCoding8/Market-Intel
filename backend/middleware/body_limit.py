@@ -33,7 +33,6 @@ class BodyLimitMiddleware(BaseHTTPMiddleware):
                 self._max = _DEFAULT_MAX_BYTES
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        # Only check methods that carry a body.
         if request.method in ("POST", "PUT", "PATCH"):
             cl = request.headers.get("content-length")
             if cl is not None:

@@ -26,9 +26,7 @@ from engine.agents.reporter import (
 )
 
 
-# ---------------------------------------------------------------------------
 # Unit tests — helpers
-# ---------------------------------------------------------------------------
 
 
 class TestBuildAnalysisSummary:
@@ -107,9 +105,7 @@ class TestBuildVerificationSummary:
         assert "Unsupported" in result
 
 
-# ---------------------------------------------------------------------------
 # Integration tests — generate_report
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio

@@ -13,14 +13,12 @@ from contracts.api import ScheduleConfig, ScheduleFrequency
 
 logger = logging.getLogger(__name__)
 
-# Map our frequency enum to APScheduler cron presets
 _FREQUENCY_CRON: dict[ScheduleFrequency, dict[str, str]] = {
     ScheduleFrequency.HOURLY: {"minute": "0"},
     ScheduleFrequency.DAILY: {"hour": "9", "minute": "0"},
     ScheduleFrequency.WEEKLY: {"day_of_week": "mon", "hour": "9", "minute": "0"},
 }
 
-# Type alias for the callback that actually runs a job
 RunJobCallback = Callable[..., Coroutine[Any, Any, None]]
 
 
@@ -98,7 +96,6 @@ class SchedulerService:
             })
         return summaries
 
-    # ------------------------------------------------------------------
     @staticmethod
     def _build_trigger(schedule: ScheduleConfig) -> Optional[CronTrigger]:
         if schedule.frequency == ScheduleFrequency.ONCE:
@@ -113,7 +110,6 @@ class SchedulerService:
             except ValueError as exc:
                 logger.error("Invalid custom cron expression %r: %s", schedule.cron_expression, exc)
                 return None
-            # Enforce minimum interval of 15 minutes to prevent abuse
             fields = schedule.cron_expression.split()
             if len(fields) >= 2 and fields[0] != "*" and fields[1] != "*":
                 pass  # Specific minute and hour — likely fine

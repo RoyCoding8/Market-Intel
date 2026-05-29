@@ -12,7 +12,6 @@ from engine.llm import extract_structured
 
 logger = logging.getLogger(__name__)
 
-# ── Internal extraction models ────────────────────────────────────────────
 
 class _Citation(BaseModel):
     url: str
@@ -49,7 +48,6 @@ class _ReportDraft(BaseModel):
     strategic_considerations: list[str] = Field(default_factory=list)
 
 
-# ── Prompt ────────────────────────────────────────────────────────────────
 
 _REPORT_PROMPT = """You are a senior intelligence analyst generating a competitor analysis report.
 
@@ -96,7 +94,6 @@ Every finding MUST include at least one citation with a URL and an exact source 
 Focus on actionable intelligence, not generic observations."""
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────
 
 def _build_analysis_summary(analysis_results: list[AnalysisResult]) -> str:
     parts: list[str] = []
@@ -167,10 +164,8 @@ def _fallback_report(request: ReportRequest, reason: str) -> ReportOutput:
         for claim in analysis.claims
     }
     findings = []
-    # If verification produced no results (e.g., verification failed), include all claims
     results_to_use = [r for r in request.verification_output.results if r.verified]
     if not results_to_use and claims:
-        # Verification failed or produced nothing — include all claims as unverified
         for i, claim in enumerate(claims.values(), 1):
             findings.append({
                 "title": claim.text[:90],
@@ -212,7 +207,6 @@ def _fallback_report(request: ReportRequest, reason: str) -> ReportOutput:
     )
 
 
-# ── Public API ────────────────────────────────────────────────────────────
 
 async def generate_report(
     request: ReportRequest,

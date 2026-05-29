@@ -55,11 +55,9 @@ async def run_pipeline(
     def _is_cancelled() -> bool:
         return cancelled_check() if cancelled_check else False
 
-    # ── Job started ──────────────────────────────────────────────────────
     ctx.state = PipelineState.SCRAPING
     await _emit(emitter, ctx, EventType.JOB_STARTED, "pipeline", "Pipeline started")
 
-    # ── Step 1: Scrape ───────────────────────────────────────────────────
     await _emit(emitter, ctx, EventType.STEP_STARTED, "pipeline", "Starting scraping")
     scrape_results: list[ScrapeResult] = []
 
@@ -115,7 +113,6 @@ async def run_pipeline(
 
     await _emit(emitter, ctx, EventType.STEP_COMPLETED, "pipeline", "Completed scraping")
 
-    # ── Step 2: Analyze ──────────────────────────────────────────────────
     if _is_cancelled():
         return await _partial_report(ctx, emitter, scrape_results, "Cancelled before analysis")
 
@@ -159,7 +156,6 @@ async def run_pipeline(
 
     await _emit(emitter, ctx, EventType.STEP_COMPLETED, "pipeline", "Completed analyzing")
 
-    # ── Step 3: Verify ───────────────────────────────────────────────────
     if _is_cancelled():
         return await _partial_report(ctx, emitter, scrape_results, "Cancelled before verification",
                                      analysis_results=analysis_results)
@@ -205,7 +201,6 @@ async def run_pipeline(
 
     await _emit(emitter, ctx, EventType.STEP_COMPLETED, "pipeline", "Completed verifying")
 
-    # ── Step 4: Report ───────────────────────────────────────────────────
     if _is_cancelled():
         return await _partial_report(ctx, emitter, scrape_results, "Cancelled before report generation",
                                      analysis_results=analysis_results, verification=verification)
@@ -237,7 +232,6 @@ async def run_pipeline(
 
     await _emit(emitter, ctx, EventType.STEP_COMPLETED, "pipeline", "Completed reporting")
 
-    # ── Done ─────────────────────────────────────────────────────────────
     ctx.state = PipelineState.DONE
     await _emit(emitter, ctx, EventType.JOB_COMPLETED, "pipeline", "Pipeline completed")
     return report

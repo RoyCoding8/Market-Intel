@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
-# Singleton instructor client wrapping litellm
 _client = instructor.from_litellm(acompletion)
 
 

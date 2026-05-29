@@ -38,7 +38,6 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("new-analysis");
   const [scheduleListKey, setScheduleListKey] = useState(0);
 
-  // Load demo data only if no real jobs exist
   useEffect(() => {
     fetchJobs().then(() => {
       const { jobs, isDemoMode } = useJobStore.getState();

@@ -20,9 +20,7 @@ from engine.agents.scraper import (
 )
 
 
-# ---------------------------------------------------------------------------
 # Unit tests — helpers
-# ---------------------------------------------------------------------------
 
 
 class TestClassifyUrl:
@@ -145,9 +143,7 @@ class TestBrightDataConfig:
         assert config.username == "brd-customer-customer-zone-unlocker-country-us"
 
 
-# ---------------------------------------------------------------------------
 # Integration tests — scrape_competitor (with mocked HTTP)
-# ---------------------------------------------------------------------------
 
 
 MOCK_HOMEPAGE_HTML = """

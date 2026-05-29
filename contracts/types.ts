@@ -197,6 +197,7 @@ export interface HealthResponse {
   status: string;
   version: string;
   llm_configured: boolean;
+  bright_data_configured: boolean;
   scheduler_running: boolean;
   active_jobs: number;
   total_jobs_completed: number;

@@ -15,7 +15,6 @@ from engine.llm import extract_structured
 logger = logging.getLogger(__name__)
 
 
-# ── Internal extraction model ─────────────────────────────────────────────
 
 class _VerificationJudgement(BaseModel):
     verified: bool
@@ -29,7 +28,6 @@ class _VerificationJudgement(BaseModel):
     temporal_accuracy: Optional[str] = None
 
 
-# ── Prompt ────────────────────────────────────────────────────────────────
 
 _VERIFY_PROMPT = """You are a senior fact-checker verifying an intelligence claim against its source text.
 
@@ -67,7 +65,6 @@ Instructions:
 6. Be conservative — prefer flagging over false verification."""
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────
 
 def _confidence_level(score: float) -> str:
     if score >= 0.9:
@@ -135,7 +132,6 @@ async def _verify_single_claim(claim: Claim, source_text: str, model: str) -> Ve
         confidence = j.confidence
         verified = confidence >= 0.5
     else:
-        # LLM said unverified — trust that, but still cap confidence if quote is missing
         confidence = j.confidence
         verified = False
     return VerificationResult(
@@ -145,7 +141,6 @@ async def _verify_single_claim(claim: Claim, source_text: str, model: str) -> Ve
     )
 
 
-# ── Public API ────────────────────────────────────────────────────────────
 
 async def verify_claims(
     request: VerificationRequest,
@@ -168,7 +163,6 @@ async def verify_claims(
 
     max_passes = request.verification_passes
     passes_completed = 1
-    # Limit concurrent LLM calls to avoid rate limiting
     _sem = asyncio.Semaphore(5)
 
     async def _verify_with_limit(claim, source_text, model):
@@ -189,7 +183,6 @@ async def verify_claims(
         else:
             results[vr.claim_id] = vr
 
-    # Additional passes: re-check anything unresolved or low-confidence.
     for pass_num in range(2, max_passes + 1):
         if _is_cancelled():
             break
