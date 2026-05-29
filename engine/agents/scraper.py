@@ -550,7 +550,12 @@ async def scrape_competitor(
             except socket.gaierror:
                 pass  # DNS failure — scraper will get a network error, which is fine
 
-        robots_parser = await _check_robots_txt(client, homepage_url)
+        ignore_robots = _env_bool("IGNORE_ROBOTS_TXT", True)
+        if ignore_robots:
+            logger.info("Ignoring robots.txt for %s (IGNORE_ROBOTS_TXT=True)", homepage_url)
+            robots_parser = None
+        else:
+            robots_parser = await _check_robots_txt(client, homepage_url)
 
         try:
             if _is_cancelled():

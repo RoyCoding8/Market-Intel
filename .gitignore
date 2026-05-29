@@ -57,10 +57,9 @@ coverage.xml
 *.log
 
 # Runtime data (SQLite, exports)
-data/*.db
-data/exports/
+/backend/data/
 
-# Docs (keep README and docs)
+# Docs (Keep essential)
 *.md
 !README.md
 !docs/*.md

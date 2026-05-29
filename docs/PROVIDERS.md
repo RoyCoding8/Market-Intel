@@ -4,17 +4,11 @@
 
 The engine uses [litellm](https://docs.litellm.ai) for provider routing and [instructor](https://python.useinstructor.com) for structured output extraction.
 
-```
-extract_structured(prompt, response_model)
-    │
-    ▼
-instructor.from_litellm(acompletion)
-    │
-    ▼
-litellm.acompletion(model="openai/mimo-v2.5-pro", messages=[...])
-    │
-    ▼
-Provider API (OpenAI, Anthropic, Google, etc.)
+```mermaid
+graph TD
+    A["extract_structured(prompt, response_model)"] --> B["instructor.from_litellm(acompletion)"]
+    B --> C["litellm.acompletion(model='openai/mimo-v2.5-pro', messages=[...])"]
+    C --> D["Provider API<br/>OpenAI · Anthropic · Google · etc."]
 ```
 
 litellm reads the `LLM_MODEL` environment variable (format: `provider/model-name`) and routes to the correct provider API. Instructor converts the Pydantic `response_model` into tool/function definitions that the LLM uses to return structured JSON.

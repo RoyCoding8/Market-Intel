@@ -18,17 +18,10 @@ docker compose up -d --build
 
 ## Architecture
 
-```
-┌──────────────┐     ┌──────────────┐
-│   Frontend   │────►│   Backend    │
-│  (Next.js)   │     │  (FastAPI)   │
-│  Port 3000   │     │  Port 8000   │
-└──────────────┘     └──────┬───────┘
-                            │
-                     ┌──────▼───────┐
-                     │    SQLite    │
-                     │  (volume)    │
-                     └──────────────┘
+```mermaid
+graph LR
+    FE["Frontend<br/>(Next.js)<br/>Port 3000"] --> BE["Backend<br/>(FastAPI)<br/>Port 8000"]
+    BE --> DB["SQLite<br/>(volume)"]
 ```
 
 ## Docker

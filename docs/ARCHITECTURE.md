@@ -4,21 +4,14 @@
 
 The Market Intelligence Agent is a multi-agent system that scrapes, analyzes, verifies, and reports on competitor intelligence. It consists of three layers:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Frontend (Next.js)                    │
-│  React 19 · Zustand · SSE · Tailwind CSS 4              │
-└──────────────────────┬──────────────────────────────────┘
-                       │ HTTP + SSE
-┌──────────────────────▼──────────────────────────────────┐
-│                  Backend (FastAPI)                        │
-│  Job Manager · Event Store · Scheduler · SQLite          │
-└──────────────────────┬──────────────────────────────────┘
-                       │ Python imports
-┌──────────────────────▼──────────────────────────────────┐
-│                  Engine (Pipeline)                        │
-│  Scraper · Analyzer · Verifier · Reporter · LLM          │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    FE["Frontend (Next.js)<br/>React 19 · Zustand · SSE · Tailwind CSS 4"]
+    BE["Backend (FastAPI)<br/>Job Manager · Event Store · Scheduler · SQLite"]
+    EN["Engine (Pipeline)<br/>Scraper · Analyzer · Verifier · Reporter · LLM"]
+
+    FE -->|"HTTP + SSE"| BE
+    BE -->|"Python imports"| EN
 ```
 
 ## Package Structure
@@ -62,13 +55,12 @@ market-intelligence-agent/
 
 ### Event Architecture
 
-```
-Engine Pipeline ──emit()──► _JobProgressEmitter ──► EventStore
-                              │                        │
-                              │ (filters lifecycle)    │ (pub/sub)
-                              ▼                        ▼
-                         JobManager              SSE subscribers
-                         (status sync)           (frontend clients)
+```mermaid
+graph LR
+    EP["Engine Pipeline"] -->|"emit()"| JPE["_JobProgressEmitter"]
+    JPE -->|"filters lifecycle"| JM["JobManager<br/>(status sync)"]
+    JPE -->|"forwards events"| ES["EventStore"]
+    ES -->|"pub/sub"| SSE["SSE subscribers<br/>(frontend clients)"]
 ```
 
 The `_JobProgressEmitter` wraps the `EventStore` and:
@@ -123,19 +115,13 @@ The `report_json` column stores the full `IntelligenceReport` as serialized JSON
 
 ## LLM Integration
 
-```
-engine/llm.py
-    │
-    ├── instructor.from_litellm(acompletion)  # Singleton client
-    │
-    └── extract_structured(prompt, response_model, ...)
-            │
-            ├── Builds message list (system + user)
-            ├── Calls _client.chat.completions.create()
-            │   with response_model=PydanticModel
-            │   max_retries=3, temperature=0.0
-            │
-            └── Returns validated Pydantic instance
+```mermaid
+graph TD
+    A["engine/llm.py"] --> B["instructor.from_litellm(acompletion)<br/>Singleton client"]
+    A --> C["extract_structured(prompt, response_model, ...)"]
+    C --> D["Build message list (system + user)"]
+    D --> E["_client.chat.completions.create()<br/>response_model=PydanticModel, max_retries=3, temperature=0.0"]
+    E --> F["Returns validated Pydantic instance"]
 ```
 
 Instructor handles:

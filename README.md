@@ -227,7 +227,7 @@ market-intelligence-agent/
       export.py         Report export (PDF/JSON/CSV)
     middleware/
       rate_limit.py     IP-based sliding-window rate limiter (100 general, 10 job creation per minute)
-    tests/              34 backend tests
+    tests/              36 backend tests
   engine/
     pipeline.py         Pipeline orchestrator (run_pipeline: scrape → analyze → verify → report)
     agents/
@@ -237,7 +237,7 @@ market-intelligence-agent/
       reporter.py       Report generation via instructor (fallback on LLM failure)
     llm.py              Singleton instructor client wrapping litellm (extract_structured with timeout/retries)
     emitter.py          EventEmitter ABC (abstract interface for event publishing)
-    tests/              58 engine tests
+    tests/              64 engine tests
   frontend/
     src/
       app/
@@ -264,9 +264,9 @@ market-intelligence-agent/
         demoData.ts     Pre-populated Notion vs Obsidian demo data
       types/
         index.ts        Re-exports from contracts/types.ts
-    tests/              Frontend tests via vitest
+    tests/              187 frontend tests via vitest
   integration/
-    test_adversarial.py  44 security/edge-case tests (SSRF, input validation, rate limiting, idempotency)
+    test_adversarial.py  Security/edge-case tests (SSRF, input validation, rate limiting, idempotency)
     test_contracts.py    Contract compliance tests (Python ↔ TypeScript sync)
     test_e2e.py          End-to-end flow tests
   docs/
@@ -300,7 +300,7 @@ cd engine && python -m pytest tests/test_verifier.py -v
 cd integration && python -m pytest test_adversarial.py -v
 ```
 
-Total: 430+ tests across all suites.
+Total: 433 tests across all suites.
 
 ---
 

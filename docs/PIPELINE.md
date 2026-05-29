@@ -4,11 +4,14 @@
 
 The pipeline in `engine/pipeline.py` runs four sequential stages:
 
-```
-Scrape ──────► Analyze ──────► Verify ──────► Report
-  │                │               │              │
-  │ N competitors   │ N pages       │ N claims     │ 1 report
-  │ → ScrapeResult  │ → AnalysisResult │ → VerificationOutput │ → ReportOutput
+```mermaid
+graph LR
+    S["Scrape"] --> A["Analyze"] --> V["Verify"] --> R["Report"]
+
+    S -.- S1["N competitors<br/>→ ScrapeResult"]
+    A -.- A1["N pages<br/>→ AnalysisResult"]
+    V -.- V1["N claims<br/>→ VerificationOutput"]
+    R -.- R1["1 report<br/>→ ReportOutput"]
 ```
 
 ### Stage 1: Scrape (`engine/agents/scraper.py`)
