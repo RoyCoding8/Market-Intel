@@ -10,16 +10,22 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getTrends } from "@/lib/api";
 import type { TrendDataPoint } from "@/types";
 
-// Demo data as fallback — deterministic to avoid SSR hydration mismatch
 function generateDemoTrendData(): TrendDataPoint[] {
   return Array.from({ length: 30 }, (_, i) => ({
-    date: new Date(Date.now() - (29 - i) * 86400000).toISOString().slice(0, 10),
-    value: (i * 3 + 7) % 12 + 2,
+    date: new Date(Date.now() - (29 - i) * 86400000)
+      .toISOString()
+      .slice(0, 10),
+    value: ((i * 3 + 7) % 12) + 2,
   }));
 }
 
@@ -34,7 +40,7 @@ function CustomTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-border bg-bg-secondary p-3 shadow-xl">
+    <div className="rounded-lg border border-border bg-bg-card p-3 shadow-lg">
       <p className="text-xs text-text-secondary">{label}</p>
       <p className="text-sm font-semibold text-text-primary">
         {payload[0].value} findings
@@ -81,34 +87,46 @@ export function TrendsChart() {
       <CardContent>
         <div className="h-[260px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+            <LineChart
+              data={data}
+              margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--border)"
+                strokeOpacity={0.5}
+              />
               <XAxis
                 dataKey="date"
-                stroke="#64748b"
+                stroke="var(--text-muted)"
                 fontSize={11}
                 tickLine={false}
-                axisLine={{ stroke: "#1e293b" }}
+                axisLine={{ stroke: "var(--border)" }}
                 tickFormatter={(val: string) => {
                   const d = new Date(val);
                   return `${d.getMonth() + 1}/${d.getDate()}`;
                 }}
               />
               <YAxis
-                stroke="#64748b"
+                stroke="var(--text-muted)"
                 fontSize={11}
                 tickLine={false}
-                axisLine={{ stroke: "#1e293b" }}
+                axisLine={{ stroke: "var(--border)" }}
                 allowDecimals={false}
               />
               <Tooltip content={<CustomTooltip />} />
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#6366f1"
+                stroke="var(--accent)"
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 4, fill: "#6366f1", stroke: "#818cf8", strokeWidth: 2 }}
+                activeDot={{
+                  r: 4,
+                  fill: "var(--accent)",
+                  stroke: "var(--accent-hover)",
+                  strokeWidth: 2,
+                }}
               />
             </LineChart>
           </ResponsiveContainer>

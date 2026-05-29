@@ -55,13 +55,13 @@ function getEventIcon(eventType: EventType): React.ReactNode {
     case "step.failed":
       return <AlertTriangle className={`${cls} text-error`} />;
     case "page.scraped":
-      return <Globe className={`${cls} text-blue-400`} />;
+      return <Globe className={`${cls} text-accent`} />;
     case "scraping.complete":
-      return <CheckCircle className={`${cls} text-blue-400`} />;
+      return <CheckCircle className={`${cls} text-accent`} />;
     case "finding.found":
       return <Search className={`${cls} text-warning`} />;
     case "comparison.generated":
-      return <FileText className={`${cls} text-purple-400`} />;
+      return <FileText className={`${cls} text-accent`} />;
     case "claim.verified":
       return <ShieldCheck className={`${cls} text-success`} />;
     case "claim.flagged":
@@ -71,9 +71,17 @@ function getEventIcon(eventType: EventType): React.ReactNode {
     case "report.generated":
       return <FileText className={`${cls} text-accent`} />;
     case "log":
-      return <span className="h-3.5 w-3.5 flex items-center justify-center text-text-muted shrink-0">-</span>;
+      return (
+        <span className="h-3.5 w-3.5 flex items-center justify-center text-text-muted shrink-0">
+          -
+        </span>
+      );
     case "progress":
-      return <span className="h-3.5 w-3.5 flex items-center justify-center text-accent shrink-0">%</span>;
+      return (
+        <span className="h-3.5 w-3.5 flex items-center justify-center text-accent shrink-0">
+          %
+        </span>
+      );
     default:
       return <Play className={`${cls} text-text-muted`} />;
   }
@@ -136,7 +144,6 @@ function getStatusLabel(status: string): string {
   return labels[status] ?? status;
 }
 
-// Group consecutive page.scraped events for collapsible display
 interface EventGroup {
   type: "single" | "grouped";
   events: AgentEvent[];
@@ -193,7 +200,7 @@ function EventGroupView({ group }: { group: EventGroup }) {
   return (
     <div>
       <button
-        className="flex items-center gap-2 py-0.5 w-full text-left hover:bg-bg-card-hover rounded px-1 -mx-1 transition-colors"
+        className="flex items-center gap-2 py-0.5 w-full text-left hover:bg-bg-secondary rounded px-1 -mx-1 transition-colors"
         onClick={() => setExpanded(!expanded)}
         aria-expanded={expanded}
         aria-label={`${expanded ? "Collapse" : "Expand"} ${group.label}`}
@@ -203,18 +210,23 @@ function EventGroupView({ group }: { group: EventGroup }) {
         ) : (
           <ChevronRight className="h-3 w-3 text-text-muted shrink-0" />
         )}
-        <Globe className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+        <Globe className="h-3.5 w-3.5 text-accent shrink-0" />
         <span className="text-text-secondary">{group.label}</span>
       </button>
       {expanded && (
         <div className="ml-8 border-l border-border pl-3 mt-1 space-y-0.5">
           {group.events.map((event, i) => (
-            <div key={event.event_id || i} className="flex items-start gap-2 py-0.5">
+            <div
+              key={event.event_id || i}
+              className="flex items-start gap-2 py-0.5"
+            >
               <span className="shrink-0 text-text-muted tabular-nums text-[10px] mt-0.5 w-14">
                 {formatTime(event.timestamp)}
               </span>
-              <Globe className="h-3 w-3 text-blue-400/60 shrink-0 mt-0.5" />
-              <span className="text-text-secondary text-xs">{event.message}</span>
+              <Globe className="h-3 w-3 text-accent/60 shrink-0 mt-0.5" />
+              <span className="text-text-secondary text-xs">
+                {event.message}
+              </span>
             </div>
           ))}
         </div>
@@ -233,7 +245,6 @@ export function ProgressConsole({
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [elapsed, setElapsed] = useState("");
 
-  // Auto-scroll to bottom on new events
   useEffect(() => {
     const el = scrollRef.current;
     if (el) {
@@ -241,13 +252,13 @@ export function ProgressConsole({
     }
   }, [events]);
 
-  // Update elapsed time
   const startedAt = jobStatus?.started_at;
   const statusStr = jobStatus?.status;
 
   useEffect(() => {
     if (!startedAt) return;
-    const isRunning = statusStr && !["completed", "failed", "cancelled"].includes(statusStr);
+    const isRunning =
+      statusStr && !["completed", "failed", "cancelled"].includes(statusStr);
     if (!isRunning) return;
 
     const interval = setInterval(() => {
@@ -267,13 +278,12 @@ export function ProgressConsole({
   return (
     <>
       <Card className="overflow-hidden">
-        {/* Header */}
         <CardHeader className="py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CardTitle className="text-sm">Agent Console</CardTitle>
               {isDemoMode && (
-                <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs text-accent">
+                <span className="rounded-full bg-accent-subtle px-2 py-0.5 text-xs text-accent">
                   Demo
                 </span>
               )}
@@ -297,8 +307,8 @@ export function ProgressConsole({
                     hasFailed
                       ? "text-error"
                       : isCancelled
-                      ? "text-text-muted"
-                      : "text-text-secondary"
+                        ? "text-text-muted"
+                        : "text-text-secondary"
                   }`}
                 >
                   {getStatusLabel(jobStatus.status)}
@@ -308,14 +318,12 @@ export function ProgressConsole({
           </div>
         </CardHeader>
 
-        {/* Progress Bar */}
         <Progress
           value={jobStatus?.progress ?? 0}
           variant={hasFailed || isCancelled ? "error" : "default"}
           className="px-0"
         />
 
-        {/* Event Log */}
         <CardContent>
           <div
             ref={scrollRef}
@@ -329,7 +337,7 @@ export function ProgressConsole({
                     <Skeleton className="h-3.5 w-3.5 rounded-full" />
                     <Skeleton
                       className="h-3"
-                      style={{ width: `${50 + (i * 13) % 40}%` }}
+                      style={{ width: `${50 + ((i * 13) % 40)}%` }}
                     />
                   </div>
                 ))}
@@ -344,7 +352,6 @@ export function ProgressConsole({
           </div>
         </CardContent>
 
-        {/* Stats Footer */}
         {jobStatus && (
           <div className="flex items-center gap-4 border-t border-border px-6 py-2.5 text-xs text-text-secondary">
             <span>
@@ -390,7 +397,8 @@ export function ProgressConsole({
           <DialogHeader>
             <DialogTitle>Cancel Job</DialogTitle>
             <DialogDescription>
-              Are you sure you want to cancel this job? Progress will be lost and this action cannot be undone.
+              Are you sure you want to cancel this job? Progress will be lost and
+              this action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

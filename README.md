@@ -300,7 +300,7 @@ cd engine && python -m pytest tests/test_verifier.py -v
 cd integration && python -m pytest test_adversarial.py -v
 ```
 
-Total: 425+ tests across all suites.
+Total: 430+ tests across all suites.
 
 ---
 

@@ -26,7 +26,11 @@ export function JobCreator({ isLoading }: { isLoading: boolean }) {
   ]);
   const [query, setQuery] = useState("");
 
-  function updateCompetitor(index: number, field: keyof CompetitorField, value: string) {
+  function updateCompetitor(
+    index: number,
+    field: keyof CompetitorField,
+    value: string
+  ) {
     setCompetitors((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
@@ -93,14 +97,17 @@ export function JobCreator({ isLoading }: { isLoading: boolean }) {
         </div>
         <p className="text-sm text-text-secondary">
           Enter competitor URLs to analyze pricing, features, team, and news.
-          The AI agents will scrape, analyze, verify, and generate an intelligence report.
+          The AI agents will scrape, analyze, verify, and generate an
+          intelligence report.
         </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Competitor Inputs */}
           {competitors.map((comp, i) => (
-            <div key={i} className="space-y-3 rounded-lg border border-border p-4">
+            <div
+              key={i}
+              className="space-y-3 rounded-lg border border-border p-4"
+            >
               <div className="flex items-center justify-between">
                 <Label className="text-xs uppercase tracking-wider text-text-muted">
                   Competitor {i + 1}
@@ -132,21 +139,24 @@ export function JobCreator({ isLoading }: { isLoading: boolean }) {
                   type="text"
                   placeholder="Name (optional)"
                   value={comp.name}
-                  onChange={(e) => updateCompetitor(i, "name", e.target.value)}
+                  onChange={(e) =>
+                    updateCompetitor(i, "name", e.target.value)
+                  }
                   aria-label={`Competitor ${i + 1} name`}
                 />
                 <Input
                   type="text"
                   placeholder="Focus areas (comma-sep)"
                   value={comp.focus_areas}
-                  onChange={(e) => updateCompetitor(i, "focus_areas", e.target.value)}
+                  onChange={(e) =>
+                    updateCompetitor(i, "focus_areas", e.target.value)
+                  }
                   aria-label={`Competitor ${i + 1} focus areas`}
                 />
               </div>
             </div>
           ))}
 
-          {/* Add Competitor Button */}
           <button
             type="button"
             onClick={addCompetitor}
@@ -156,7 +166,6 @@ export function JobCreator({ isLoading }: { isLoading: boolean }) {
             Add Competitor
           </button>
 
-          {/* Query Input */}
           <div className="space-y-2">
             <Label htmlFor="analysis-query">Analysis Query (optional)</Label>
             <Textarea
@@ -168,7 +177,6 @@ export function JobCreator({ isLoading }: { isLoading: boolean }) {
             />
           </div>
 
-          {/* Submit Button */}
           <Button
             type="submit"
             className="w-full"

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -214,7 +214,7 @@ async def test_pipeline_handles_analysis_failure():
         mock_scrape.return_value = _mock_scrape_result()
         mock_analyze.side_effect = Exception("Analysis error")
 
-        result = await run_pipeline(ctx, emitter)
+        await run_pipeline(ctx, emitter)
 
     assert ctx.state == PipelineState.ERROR
 
@@ -288,7 +288,7 @@ async def test_pipeline_multiple_competitors():
         mock_verify.return_value = _mock_verification_output()
         mock_report.return_value = _mock_report_output()
 
-        result = await run_pipeline(ctx, emitter)
+        await run_pipeline(ctx, emitter)
 
     assert mock_scrape.call_count == 2
     assert mock_analyze.call_count == 2

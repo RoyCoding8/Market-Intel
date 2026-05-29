@@ -45,7 +45,7 @@ async def health_check(request: Request) -> HealthResponse:
     records = await job_mgr.list_records()
     return HealthResponse(
         status="ok",
-        version="0.2.0",
+        version=request.app.version,
         llm_configured=_llm_configured(),
         scheduler_running=scheduler.running,
         active_jobs=sum(1 for r in records if r.status.value not in {"completed", "failed", "cancelled"}),

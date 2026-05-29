@@ -62,7 +62,7 @@ export default function DashboardPage() {
 
       {/* Error Banner */}
       {error && (
-        <div className="mb-6 rounded-lg border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">
+        <div className="mb-6 rounded-lg border border-error/20 bg-error-subtle px-4 py-3 text-sm text-error">
           <span className="font-medium">Error:</span> {error}
         </div>
       )}

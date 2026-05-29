@@ -9,11 +9,13 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-bg-card border border-border text-text-secondary",
-        success: "bg-success/15 text-success border border-success/30",
-        warning: "bg-warning/15 text-warning border border-warning/30",
-        error: "bg-error/15 text-error border border-error/30",
-        info: "bg-accent/15 text-accent border border-accent/30",
+        default: "bg-bg-secondary border border-border text-text-secondary",
+        success:
+          "bg-success-subtle text-success border border-success/20",
+        warning:
+          "bg-warning-subtle text-warning border border-warning/20",
+        error: "bg-error-subtle text-error border border-error/20",
+        info: "bg-accent-subtle text-accent border border-accent/20",
         outline: "border border-border text-text-primary",
       },
     },

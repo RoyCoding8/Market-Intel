@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 from datetime import datetime, timezone
 
@@ -11,7 +10,6 @@ from httpx import AsyncClient
 
 from contracts.api import CompetitorInput, CreateJobRequest
 from contracts.events import AgentEvent, EventType
-from backend.services.job_manager import JobManager
 
 
 VALID_PAYLOAD = {

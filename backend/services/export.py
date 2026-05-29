@@ -99,7 +99,7 @@ def _export_pdf(report: IntelligenceReport, request: ExportRequest, job_id: str)
     try:
         from reportlab.lib import colors
         from reportlab.lib.pagesizes import letter
-        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.styles import getSampleStyleSheet
         from reportlab.lib.units import inch
         from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 

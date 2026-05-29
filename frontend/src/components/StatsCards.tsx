@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Briefcase, FileText, Users, ShieldCheck, TrendingUp, TrendingDown } from "lucide-react";
+import {
+  Briefcase,
+  FileText,
+  Users,
+  ShieldCheck,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getStats } from "@/lib/api";
@@ -57,7 +64,7 @@ function StatCard({ icon, label, value, trend, loading }: StatCardProps) {
             </div>
           )}
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-subtle text-accent">
           {icon}
         </div>
       </div>
@@ -76,7 +83,6 @@ export function StatsCards() {
         if (!cancelled) setStats(data);
       })
       .catch(() => {
-        // Use demo fallback values
         if (!cancelled) {
           setStats({
             total_jobs: 12,
@@ -126,7 +132,7 @@ export function StatsCards() {
       label: "Avg Confidence",
       value: stats
         ? `${Math.round(stats.average_confidence_score * 100)}%`
-        : "—",
+        : "\u2014",
       trend: { value: 2, direction: "up" },
     },
   ];

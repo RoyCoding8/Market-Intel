@@ -1,15 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { BarChart3, Search, GitCompare, Lightbulb } from "lucide-react";
 import {
-  BarChart3,
-  Search,
-  GitCompare,
-  Lightbulb,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
 import { FindingCard } from "./FindingCard";
 import { ComparisonTable } from "./ComparisonTable";
 import { ExportButton } from "./ExportButton";
@@ -20,13 +25,21 @@ interface ReportViewProps {
   jobId?: string;
 }
 
-function StatBadge({ label, value }: { label: string; value: string | number }) {
+function StatBadge({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) {
   return (
-    <div className="rounded-lg border border-border bg-bg-primary px-4 py-3">
-      <p className="text-xs font-medium uppercase tracking-wider text-text-secondary">
+    <div className="rounded-lg border border-border bg-bg-secondary px-4 py-3">
+      <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
         {label}
       </p>
-      <p className="mt-1 text-lg font-bold text-text-primary tabular-nums">{value}</p>
+      <p className="mt-1 text-lg font-bold text-text-primary tabular-nums">
+        {value}
+      </p>
     </div>
   );
 }
@@ -45,7 +58,6 @@ export function ReportView({ report, jobId }: ReportViewProps) {
 
   return (
     <div className="space-y-6">
-      {/* Report Header */}
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -67,7 +79,10 @@ export function ReportView({ report, jobId }: ReportViewProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatBadge label="Competitors" value={report.competitors.length} />
+            <StatBadge
+              label="Competitors"
+              value={report.competitors.length}
+            />
             <StatBadge label="Findings" value={report.findings.length} />
             <StatBadge label="Sources" value={report.total_sources} />
             <StatBadge
@@ -78,7 +93,6 @@ export function ReportView({ report, jobId }: ReportViewProps) {
         </CardContent>
       </Card>
 
-      {/* Tabbed Report Content */}
       <Tabs defaultValue="overview">
         <TabsList className="w-full sm:w-auto flex flex-wrap">
           <TabsTrigger value="overview">
@@ -99,7 +113,6 @@ export function ReportView({ report, jobId }: ReportViewProps) {
           </TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="space-y-6">
             <Card>
@@ -132,18 +145,16 @@ export function ReportView({ report, jobId }: ReportViewProps) {
           </div>
         </TabsContent>
 
-        {/* Findings Tab */}
         <TabsContent value="findings">
           <div className="space-y-4">
-            {/* Category Filter */}
             {categories.length > 1 && (
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setFindingFilter("all")}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     findingFilter === "all"
-                      ? "bg-accent text-white"
-                      : "bg-bg-card text-text-secondary hover:text-text-primary border border-border"
+                      ? "bg-accent text-text-inverse"
+                      : "bg-bg-secondary text-text-secondary hover:text-text-primary border border-border"
                   }`}
                 >
                   All ({report.findings.length})
@@ -158,8 +169,8 @@ export function ReportView({ report, jobId }: ReportViewProps) {
                       onClick={() => setFindingFilter(cat)}
                       className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
                         findingFilter === cat
-                          ? "bg-accent text-white"
-                          : "bg-bg-card text-text-secondary hover:text-text-primary border border-border"
+                          ? "bg-accent text-text-inverse"
+                          : "bg-bg-secondary text-text-secondary hover:text-text-primary border border-border"
                       }`}
                     >
                       {cat.replace(/_/g, " ")} ({count})
@@ -169,7 +180,6 @@ export function ReportView({ report, jobId }: ReportViewProps) {
               </div>
             )}
 
-            {/* Findings Grid */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {filteredFindings.map((finding, i) => (
                 <FindingCard key={finding.id} finding={finding} index={i} />
@@ -184,7 +194,6 @@ export function ReportView({ report, jobId }: ReportViewProps) {
           </div>
         </TabsContent>
 
-        {/* Comparison Tab */}
         <TabsContent value="comparison">
           {report.comparison_tables.length > 0 ? (
             <div className="space-y-4">
@@ -203,7 +212,6 @@ export function ReportView({ report, jobId }: ReportViewProps) {
           )}
         </TabsContent>
 
-        {/* Recommendations Tab */}
         <TabsContent value="recommendations">
           {report.recommendations.length > 0 ? (
             <Card>
@@ -211,7 +219,7 @@ export function ReportView({ report, jobId }: ReportViewProps) {
                 <ol className="space-y-4">
                   {report.recommendations.map((rec, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/15 text-xs font-bold text-accent">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-xs font-bold text-accent">
                         {i + 1}
                       </span>
                       <p className="text-sm leading-relaxed text-text-secondary">

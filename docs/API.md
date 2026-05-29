@@ -22,7 +22,7 @@ Liveness and readiness probe.
 ```json
 {
   "status": "ok",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "llm_configured": true,
   "scheduler_running": true,
   "active_jobs": 2,

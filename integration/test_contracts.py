@@ -272,7 +272,7 @@ class TestAPIModels:
     def test_health_response(self):
         resp = HealthResponse()
         assert resp.status == "ok"
-        assert resp.version == "0.2.0"
+        assert resp.version == "0.3.0"
 
     def test_cancel_job_response(self):
         resp = CancelJobResponse(

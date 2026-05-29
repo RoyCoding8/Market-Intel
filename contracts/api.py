@@ -312,7 +312,7 @@ class JobListResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str = "ok"
-    version: str = "0.2.0"
+    version: str = "0.3.0"
     llm_configured: bool = False
     scheduler_running: bool = False
     active_jobs: int = 0

@@ -22,7 +22,6 @@ from engine.agents.analyzer import (
     _FeatureItem,
     _NewsItem,
     _PricingPlan,
-    _TeamMember,
     analyze_competitor,
 )
 
@@ -114,7 +113,7 @@ async def test_analyze_competitor_skips_non_pricing_pages():
     with patch("engine.agents.analyzer.extract_structured", new_callable=AsyncMock) as mock_llm:
         async def side_effect(prompt, model_cls, **kwargs):
             # Blog pages only trigger: features, team, news, claims
-            # Pricing is skipped because blog is not in _EXTRACTORS["pricing"]
+            # Pricing is skipped because blog is not in the pricing page types
             if model_cls is _FeatureExtraction:
                 return _FeatureExtraction(features=[])
             if model_cls is _TeamExtraction:

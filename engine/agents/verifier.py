@@ -70,9 +70,12 @@ Instructions:
 # ── Helpers ───────────────────────────────────────────────────────────────
 
 def _confidence_level(score: float) -> str:
-    if score >= 0.9: return "high"
-    if score >= 0.7: return "medium"
-    if score >= 0.5: return "low"
+    if score >= 0.9:
+        return "high"
+    if score >= 0.7:
+        return "medium"
+    if score >= 0.5:
+        return "low"
     return "very_low"
 
 
@@ -188,9 +191,11 @@ async def verify_claims(
 
     # Additional passes: re-check anything unresolved or low-confidence.
     for pass_num in range(2, max_passes + 1):
-        if _is_cancelled(): break
+        if _is_cancelled():
+            break
         flagged = [vr for vr in results.values() if (not vr.verified) or vr.confidence < 0.6]
-        if not flagged: break
+        if not flagged:
+            break
         logger.info("Verification pass %d: re-checking %d flagged claims", pass_num, len(flagged))
         passes_completed = pass_num
 

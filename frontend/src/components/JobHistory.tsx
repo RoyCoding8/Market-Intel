@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, XCircle } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -32,7 +37,9 @@ interface JobHistoryProps {
 function StatusBadge({ status }: { status: string }) {
   const c = statusColor(status);
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${c.text}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 text-xs font-medium ${c.text}`}
+    >
       <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
       {c.label}
     </span>
@@ -47,27 +54,32 @@ export function JobHistory({
   filter = "all",
 }: JobHistoryProps) {
   const router = useRouter();
-  const [cancelTarget, setCancelTarget] = useState<JobStatusResponse | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<JobStatusResponse | null>(
+    null
+  );
   const [cancelling, setCancelling] = useState(false);
 
   const filteredJobs =
-    filter === "all"
-      ? jobs
-      : jobs.filter((j) => j.status === filter);
+    filter === "all" ? jobs : jobs.filter((j) => j.status === filter);
 
   async function handleCancel() {
     if (!cancelTarget) return;
     setCancelling(true);
     try {
       await cancelJob(cancelTarget.job_id);
-      toast({ variant: "info", title: "Job Cancelled", description: `Job ${cancelTarget.job_id.slice(0, 8)}... has been cancelled.` });
+      toast({
+        variant: "info",
+        title: "Job Cancelled",
+        description: `Job ${cancelTarget.job_id.slice(0, 8)}... has been cancelled.`,
+      });
       onJobCancelled?.(cancelTarget.job_id);
       setCancelTarget(null);
     } catch (err) {
       toast({
         variant: "error",
         title: "Cancellation Failed",
-        description: err instanceof Error ? err.message : "Could not cancel the job.",
+        description:
+          err instanceof Error ? err.message : "Could not cancel the job.",
       });
     } finally {
       setCancelling(false);
@@ -75,7 +87,13 @@ export function JobHistory({
   }
 
   function isActive(status: string): boolean {
-    return ["pending", "scraping", "analyzing", "verifying", "generating_report"].includes(status);
+    return [
+      "pending",
+      "scraping",
+      "analyzing",
+      "verifying",
+      "generating_report",
+    ].includes(status);
   }
 
   if (filteredJobs.length === 0) {
@@ -101,11 +119,13 @@ export function JobHistory({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Job History</CardTitle>
-            <span className="text-xs text-text-muted">{filteredJobs.length} jobs</span>
+            <span className="text-xs text-text-muted">
+              {filteredJobs.length} jobs
+            </span>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="divide-y divide-border/50">
+          <div className="divide-y divide-border">
             {filteredJobs.map((job) => {
               const isSelected = job.job_id === activeJobId;
               const isJobActive = isActive(job.status);
@@ -114,8 +134,8 @@ export function JobHistory({
                   key={job.job_id}
                   className={`flex items-center gap-4 px-6 py-3 transition-colors cursor-pointer ${
                     isSelected
-                      ? "bg-accent/10 border-l-2 border-l-accent"
-                      : "hover:bg-bg-card-hover border-l-2 border-l-transparent"
+                      ? "bg-accent-subtle"
+                      : "hover:bg-bg-secondary"
                   }`}
                   onClick={() => onSelectJob?.(job.job_id)}
                   role="button"
@@ -180,7 +200,7 @@ export function JobHistory({
                       </Button>
                     )}
                     {isSelected && (
-                      <div className="ml-1 h-2 w-2 rounded-full bg-accent animate-pulse" />
+                      <div className="ml-1 h-2 w-2 rounded-full bg-accent" />
                     )}
                   </div>
                 </div>
@@ -190,7 +210,10 @@ export function JobHistory({
         </CardContent>
       </Card>
 
-      <Dialog open={!!cancelTarget} onOpenChange={(open) => !open && setCancelTarget(null)}>
+      <Dialog
+        open={!!cancelTarget}
+        onOpenChange={(open) => !open && setCancelTarget(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Cancel Job</DialogTitle>
@@ -202,7 +225,11 @@ export function JobHistory({
             <DialogClose asChild>
               <Button variant="secondary">Keep Running</Button>
             </DialogClose>
-            <Button variant="danger" onClick={handleCancel} isLoading={cancelling}>
+            <Button
+              variant="danger"
+              onClick={handleCancel}
+              isLoading={cancelling}
+            >
               Cancel Job
             </Button>
           </DialogFooter>

@@ -65,7 +65,7 @@ export default function ReportPage() {
             <ReportView report={report} jobId={jobId} />
           </ErrorBoundary>
         ) : (
-          <div className="rounded-xl border border-border bg-bg-card/80 backdrop-blur-sm p-8 text-center">
+          <div className="rounded-xl border border-border bg-bg-card p-8 text-center">
             <p className="text-text-secondary">
               No report available yet. The analysis may still be in progress.
             </p>

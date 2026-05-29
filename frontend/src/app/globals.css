@@ -1,77 +1,156 @@
 @import "tailwindcss";
 
+/* ── Color System (OKLCH, cool blue hue 250) ───────────────────────── */
+
 :root {
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #1a1a2e;
-  --bg-card: #16162a;
-  --bg-card-hover: #1e1e3a;
-  --accent: #6366f1;
-  --accent-hover: #818cf8;
-  --accent-muted: #4f46e520;
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
-  --border: #1e293b;
-  --border-hover: #334155;
+  /* Primitives */
+  --blue-50: oklch(97% 0.008 250);
+  --blue-100: oklch(93% 0.015 250);
+  --blue-200: oklch(87% 0.03 250);
+  --blue-300: oklch(78% 0.06 250);
+  --blue-400: oklch(68% 0.12 250);
+  --blue-500: oklch(58% 0.18 250);
+  --blue-600: oklch(50% 0.2 250);
+  --blue-700: oklch(42% 0.18 250);
+  --blue-800: oklch(35% 0.14 250);
+  --blue-900: oklch(28% 0.1 250);
+  --blue-950: oklch(20% 0.06 250);
+
+  /* Semantic: Light mode (default) */
+  --bg-primary: oklch(98.5% 0.004 250);
+  --bg-secondary: oklch(96% 0.008 250);
+  --bg-card: oklch(100% 0 0);
+  --bg-card-hover: oklch(97% 0.006 250);
+  --bg-elevated: oklch(100% 0 0);
+
+  --text-primary: oklch(13% 0.02 250);
+  --text-secondary: oklch(40% 0.025 250);
+  --text-muted: oklch(55% 0.02 250);
+  --text-inverse: oklch(98% 0 0);
+
+  --accent: oklch(55% 0.2 250);
+  --accent-hover: oklch(50% 0.22 250);
+  --accent-subtle: oklch(95% 0.02 250);
+
+  --border: oklch(88% 0.015 250);
+  --border-hover: oklch(78% 0.03 250);
+  --border-active: oklch(55% 0.2 250);
+
+  --success: oklch(62% 0.18 155);
+  --success-subtle: oklch(95% 0.03 155);
+  --warning: oklch(75% 0.15 75);
+  --warning-subtle: oklch(95% 0.03 75);
+  --error: oklch(58% 0.2 25);
+  --error-subtle: oklch(95% 0.03 25);
+
+  --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.05);
+  --shadow-md: 0 4px 12px oklch(0% 0 0 / 0.08);
+  --shadow-lg: 0 8px 24px oklch(0% 0 0 / 0.1);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
+
+/* ── Dark mode ─────────────────────────────────────────────────────── */
+
+.dark,
+[data-theme="dark"] {
+  --bg-primary: oklch(13% 0.015 250);
+  --bg-secondary: oklch(17% 0.02 250);
+  --bg-card: oklch(19% 0.02 250);
+  --bg-card-hover: oklch(22% 0.025 250);
+  --bg-elevated: oklch(24% 0.025 250);
+
+  --text-primary: oklch(95% 0.005 250);
+  --text-secondary: oklch(72% 0.015 250);
+  --text-muted: oklch(58% 0.015 250);
+  --text-inverse: oklch(13% 0.02 250);
+
+  --accent: oklch(65% 0.17 250);
+  --accent-hover: oklch(70% 0.15 250);
+  --accent-subtle: oklch(22% 0.04 250);
+
+  --border: oklch(28% 0.02 250);
+  --border-hover: oklch(38% 0.03 250);
+  --border-active: oklch(65% 0.17 250);
+
+  --success: oklch(68% 0.15 155);
+  --success-subtle: oklch(20% 0.03 155);
+  --warning: oklch(78% 0.12 75);
+  --warning-subtle: oklch(20% 0.03 75);
+  --error: oklch(65% 0.18 25);
+  --error-subtle: oklch(20% 0.03 25);
+
+  --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.2);
+  --shadow-md: 0 4px 12px oklch(0% 0 0 / 0.3);
+  --shadow-lg: 0 8px 24px oklch(0% 0 0 / 0.4);
+}
+
+/* ── Tailwind v4 theme binding ─────────────────────────────────────── */
 
 @theme inline {
   --color-bg-primary: var(--bg-primary);
   --color-bg-secondary: var(--bg-secondary);
   --color-bg-card: var(--bg-card);
   --color-bg-card-hover: var(--bg-card-hover);
-  --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
-  --color-accent-muted: var(--accent-muted);
+  --color-bg-elevated: var(--bg-elevated);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-error: var(--error);
+  --color-text-inverse: var(--text-inverse);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
   --color-border: var(--border);
   --color-border-hover: var(--border-hover);
+  --color-border-active: var(--border-active);
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-error: var(--error);
+  --color-error-subtle: var(--error-subtle);
   --color-background: var(--bg-primary);
   --color-foreground: var(--text-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-/* ── Base ─────────────────────────────────────────────────────────────── */
+/* ── Base ──────────────────────────────────────────────────────────── */
 
 html {
+  color-scheme: light;
+}
+
+.dark,
+[data-theme="dark"] {
   color-scheme: dark;
 }
 
 body {
-  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0a0a0f 100%);
+  background: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Glassmorphism Card ───────────────────────────────────────────────── */
+/* ── Focus Visible ─────────────────────────────────────────────────── */
 
-.glass-card {
-  background: rgba(26, 26, 46, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(99, 102, 241, 0.15);
-  border-radius: 12px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
-.glass-card-hover:hover {
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
+/* ── Selection ─────────────────────────────────────────────────────── */
+
+::selection {
+  background: oklch(55% 0.2 250 / 0.2);
+  color: var(--text-primary);
 }
 
-/* ── Scrollbar ────────────────────────────────────────────────────────── */
+/* ── Scrollbar ─────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
   width: 6px;
@@ -83,35 +162,33 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.3);
+  background: var(--border);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.5);
+  background: var(--border-hover);
 }
 
-/* ── Animations ───────────────────────────────────────────────────────── */
-
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 5px rgba(99, 102, 241, 0.2); }
-  50% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
-}
+/* ── Animations ────────────────────────────────────────────────────── */
 
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
+  animation: fade-in 0.2s ease-out forwards;
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Skeleton Loading ─────────────────────────────────────────────────── */
+.animate-slide-down {
+  animation: slide-down 0.2s ease-out forwards;
+}
 
 @keyframes skeleton-shimmer {
   0% { background-position: -200% 0; }
@@ -121,47 +198,21 @@ body {
 .skeleton {
   background: linear-gradient(
     90deg,
-    rgba(26, 26, 46, 0.6) 25%,
-    rgba(99, 102, 241, 0.1) 50%,
-    rgba(26, 26, 46, 0.6) 75%
+    var(--bg-secondary) 25%,
+    var(--bg-card-hover) 50%,
+    var(--bg-secondary) 75%
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
   border-radius: 6px;
 }
 
-/* ── Focus Visible (Accessibility) ───────────────────────────────────── */
-
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* ── Selection ────────────────────────────────────────────────────────── */
-
-::selection {
-  background: rgba(99, 102, 241, 0.3);
-  color: var(--text-primary);
-}
-
-/* ── Slide-down entrance for panels ───────────────────────────────────── */
-
-@keyframes slide-down {
-  from { opacity: 0; transform: translateY(-12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-slide-down {
-  animation: slide-down 0.35s ease-out forwards;
-}
-
-/* ── Staggered fade-in for lists ──────────────────────────────────────── */
-
-@keyframes stagger-in {
-  from { opacity: 0; transform: translateX(-6px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-.animate-stagger-in {
-  animation: stagger-in 0.25s ease-out forwards;
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-down {
+    animation: none;
+  }
+  .skeleton {
+    animation: none;
+  }
 }

@@ -10,7 +10,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from contracts.engine import AnalysisRequest, AnalysisResult, Claim, ScrapeResult, ScrapedContent
+from contracts.engine import AnalysisRequest, AnalysisResult, Claim, ScrapedContent
 from engine.llm import extract_structured
 
 logger = logging.getLogger(__name__)
@@ -170,33 +170,27 @@ async def _extract_with_prompt(prompt: str, model: str, response_model: type, ur
         logger.warning("%s extraction failed for %s: %s", label, url, exc)
         return None
 
-_EXTRACTORS = {
-    "pricing": ("pricing", "homepage", "features"),
-    "features": ("features", "homepage", "unknown", "pricing"),
-    "team": ("about", "homepage", "jobs"),
-    "news": ("blog", "homepage", "unknown"),
-}
 
 async def _extract_pricing(page: ScrapedContent, model: str) -> Optional[dict]:
-    if page.page_type not in _EXTRACTORS["pricing"]:
+    if page.page_type not in ("pricing", "homepage", "features"):
         return None
     result = await _extract_with_prompt(_PRICING_PROMPT.format(url=page.url, content=page.html_text[:8000]), model, _PricingExtraction, page.url, "Pricing")
     return result.model_dump() if result else None
 
 async def _extract_features(page: ScrapedContent, model: str) -> list[dict]:
-    if page.page_type not in _EXTRACTORS["features"]:
+    if page.page_type not in ("features", "homepage", "unknown", "pricing"):
         return []
     result = await _extract_with_prompt(_FEATURE_PROMPT.format(url=page.url, content=page.html_text[:8000]), model, _FeatureExtraction, page.url, "Feature")
     return [f.model_dump() for f in result.features] if result else []
 
 async def _extract_team(page: ScrapedContent, model: str) -> Optional[dict]:
-    if page.page_type not in _EXTRACTORS["team"]:
+    if page.page_type not in ("about", "homepage", "jobs"):
         return None
     result = await _extract_with_prompt(_TEAM_PROMPT.format(url=page.url, content=page.html_text[:8000]), model, _TeamExtraction, page.url, "Team")
     return result.model_dump() if result else None
 
 async def _extract_news(page: ScrapedContent, model: str) -> list[dict]:
-    if page.page_type not in _EXTRACTORS["news"]:
+    if page.page_type not in ("blog", "homepage", "unknown"):
         return []
     result = await _extract_with_prompt(_NEWS_PROMPT.format(url=page.url, content=page.html_text[:8000]), model, _NewsExtraction, page.url, "News")
     return [n.model_dump() for n in result.items] if result else []

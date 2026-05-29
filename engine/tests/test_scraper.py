@@ -84,8 +84,8 @@ class TestExtractLinks:
     def test_extracts_same_domain_links(self):
         html = '<a href="/pricing">Pricing</a><a href="https://other.com/x">External</a>'
         links = _extract_links(html, "https://example.com")
-        assert any("/pricing" in l for l in links)
-        assert not any("other.com" in l for l in links)
+        assert any("/pricing" in link for link in links)
+        assert not any("other.com" in link for link in links)
 
     def test_skips_mailto_and_hash(self):
         html = '<a href="mailto:a@b.com">Email</a><a href="#top">Top</a>'

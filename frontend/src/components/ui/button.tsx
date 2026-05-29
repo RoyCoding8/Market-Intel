@@ -5,15 +5,20 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        primary: "bg-accent text-white hover:bg-accent-hover shadow-lg shadow-accent/20",
-        secondary: "bg-bg-card border border-border text-text-primary hover:bg-bg-card-hover hover:border-border-hover",
-        ghost: "text-text-secondary hover:text-text-primary hover:bg-bg-card",
-        danger: "bg-error/10 text-error border border-error/30 hover:bg-error/20",
-        outline: "border border-border text-text-primary hover:bg-bg-card hover:border-accent",
+        primary:
+          "bg-accent text-text-inverse hover:bg-accent-hover shadow-sm",
+        secondary:
+          "bg-bg-card border border-border text-text-primary hover:bg-bg-card-hover hover:border-border-hover",
+        ghost:
+          "text-text-secondary hover:text-text-primary hover:bg-bg-secondary",
+        danger:
+          "bg-error-subtle text-error border border-error/20 hover:bg-error/10",
+        outline:
+          "border border-border text-text-primary hover:bg-bg-secondary hover:border-accent",
       },
       size: {
         sm: "h-8 px-3 text-xs",

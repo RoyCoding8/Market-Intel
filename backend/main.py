@@ -83,7 +83,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         if not row.get("enabled"):
             continue
         try:
-            request = CreateJobRequest.model_validate_json(row["request_json"])
+            CreateJobRequest.model_validate_json(row["request_json"])
             schedule = ScheduleConfig(
                 frequency=ScheduleFrequency(row["frequency"]),
                 cron_expression=row["cron_expression"],

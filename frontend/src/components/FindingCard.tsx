@@ -12,11 +12,19 @@ interface FindingCardProps {
   index: number;
 }
 
-function ConfidenceBadge({ level, score }: { level: ConfidenceLevel; score: number }) {
-  const variant = level === "high" ? "success" : level === "medium" ? "warning" : "error";
+function ConfidenceBadge({
+  level,
+  score,
+}: {
+  level: ConfidenceLevel;
+  score: number;
+}) {
+  const variant =
+    level === "high" ? "success" : level === "medium" ? "warning" : "error";
   return (
     <Badge variant={variant}>
-      {level.charAt(0).toUpperCase() + level.slice(1)} ({Math.round(score * 100)}%)
+      {level.charAt(0).toUpperCase() + level.slice(1)} (
+      {Math.round(score * 100)}%)
     </Badge>
   );
 }
@@ -24,54 +32,59 @@ function ConfidenceBadge({ level, score }: { level: ConfidenceLevel; score: numb
 function safeHttpUrl(value: string): string | undefined {
   try {
     const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:" ? value : undefined;
+    return url.protocol === "http:" || url.protocol === "https:"
+      ? value
+      : undefined;
   } catch {
     return undefined;
   }
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  pricing: "bg-accent/15 text-accent",
-  features: "bg-success/15 text-success",
-  ecosystem: "bg-warning/15 text-warning",
-  market_positioning: "bg-error/15 text-error",
-  developer_experience: "bg-purple-500/15 text-purple-400",
+  pricing: "bg-accent-subtle text-accent",
+  features: "bg-success-subtle text-success",
+  ecosystem: "bg-warning-subtle text-warning",
+  market_positioning: "bg-error-subtle text-error",
+  developer_experience: "bg-accent-subtle text-accent",
 };
 
 export function FindingCard({ finding, index }: FindingCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const categoryColor = CATEGORY_COLORS[finding.category] || "bg-bg-card text-text-secondary";
+  const categoryColor =
+    CATEGORY_COLORS[finding.category] || "bg-bg-secondary text-text-secondary";
 
   return (
-    <Card hover className="transition-all duration-200">
+    <Card hover className="transition-colors">
       <CardContent className="p-5">
-        {/* Header */}
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent/15 font-mono text-xs font-bold text-accent">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-subtle font-mono text-xs font-bold text-accent">
               {index + 1}
             </div>
             <div className="min-w-0">
               <h4 className="text-sm font-semibold text-text-primary leading-tight">
                 {finding.title}
               </h4>
-              <span className={`mt-1 inline-block rounded px-1.5 py-0.5 text-xs capitalize ${categoryColor}`}>
+              <span
+                className={`mt-1 inline-block rounded px-1.5 py-0.5 text-xs capitalize ${categoryColor}`}
+              >
                 {finding.category.replace(/_/g, " ")}
               </span>
             </div>
           </div>
-          <ConfidenceBadge level={finding.confidence} score={finding.confidence_score} />
+          <ConfidenceBadge
+            level={finding.confidence}
+            score={finding.confidence_score}
+          />
         </div>
 
-        {/* Summary */}
         <p className="mb-3 text-sm leading-relaxed text-text-secondary">
           {finding.summary}
         </p>
 
-        {/* Impact */}
         {finding.impact && (
-          <div className="mb-3 rounded-lg border border-accent/10 bg-accent/5 p-3">
+          <div className="mb-3 rounded-lg border border-accent/10 bg-accent-subtle p-3">
             <p className="text-xs font-medium uppercase tracking-wider text-accent mb-1">
               Impact
             </p>
@@ -79,17 +92,17 @@ export function FindingCard({ finding, index }: FindingCardProps) {
           </div>
         )}
 
-        {/* Recommendation */}
         {finding.recommendation && (
-          <div className="mb-3 rounded-lg border border-success/10 bg-success/5 p-3">
+          <div className="mb-3 rounded-lg border border-success/10 bg-success-subtle p-3">
             <p className="text-xs font-medium uppercase tracking-wider text-success mb-1">
               Recommendation
             </p>
-            <p className="text-sm text-text-secondary">{finding.recommendation}</p>
+            <p className="text-sm text-text-secondary">
+              {finding.recommendation}
+            </p>
           </div>
         )}
 
-        {/* Citations Toggle */}
         {finding.citations.length > 0 && (
           <div>
             <button
@@ -101,7 +114,8 @@ export function FindingCard({ finding, index }: FindingCardProps) {
               <ChevronRight
                 className={`h-3 w-3 transition-transform ${isExpanded ? "rotate-90" : ""}`}
               />
-              {finding.citations.length} source{finding.citations.length !== 1 ? "s" : ""}
+              {finding.citations.length} source
+              {finding.citations.length !== 1 ? "s" : ""}
             </button>
 
             {isExpanded && (
@@ -109,7 +123,7 @@ export function FindingCard({ finding, index }: FindingCardProps) {
                 {finding.citations.map((citation, ci) => (
                   <div
                     key={ci}
-                    className="rounded-md border border-border bg-bg-primary p-3"
+                    className="rounded-md border border-border bg-bg-secondary p-3"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <a
@@ -127,7 +141,8 @@ export function FindingCard({ finding, index }: FindingCardProps) {
                       &ldquo;{citation.quote}&rdquo;
                     </blockquote>
                     <p className="mt-1 text-xs text-text-muted">
-                      Accessed: {new Date(citation.accessed_at).toLocaleDateString()}
+                      Accessed:{" "}
+                      {new Date(citation.accessed_at).toLocaleDateString()}
                     </p>
                   </div>
                 ))}
