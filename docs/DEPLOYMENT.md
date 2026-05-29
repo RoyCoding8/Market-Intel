@@ -47,23 +47,37 @@ docker compose up -d --build
 - Non-root user (`nextjs`)
 - Health check via `fetch()`
 
-## Render.com
+## Production Deployment (Railway + Vercel)
 
-`render.yaml` configures both services:
+The backend requires a long-running server (SSE streaming, background pipeline tasks, in-memory event store), so it runs on **Railway**. The frontend is a standard Next.js app deployed to **Vercel** (free, zero-config).
 
-### Backend
-- Runtime: Python
-- Build: `pip install uv && uv sync --frozen`
-- Start: `uvicorn backend.main:create_app --factory --host 0.0.0.0 --port $PORT`
-- Disk: 1GB persistent storage for SQLite
-- Health check: `/api/health`
+```mermaid
+graph LR
+    FE["Frontend<br/>Vercel<br/>*.vercel.app"] -- "HTTP + SSE" --> BE["Backend<br/>Railway<br/>*.up.railway.app"]
+    BE --> DB["SQLite"]
 
-### Frontend
-- Runtime: Node
-- Root directory: `frontend`
-- Build: `npm ci && npm run build`
-- Start: `npm start`
-- Env: `NEXT_PUBLIC_API_URL=https://market-intel-backend.onrender.com`
+    style FE fill:#1a1a2e,stroke:#e94560,color:#fff
+    style BE fill:#1a1a2e,stroke:#0f3460,color:#fff
+    style DB fill:#1a1a2e,stroke:#16213e,color:#fff
+```
+
+### Backend → Railway
+
+1. Sign in at [railway.app](https://railway.app) with GitHub
+2. **New Project → Deploy from GitHub repo**
+3. Railway auto-detects `Dockerfile.backend`
+4. Set `PORT` = `8000`
+5. Add env vars (see [Environment Variables](#environment-variables) below)
+6. **Settings → Networking → Generate Domain** to get your public URL
+7. Set `CORS_ORIGINS` to your Vercel frontend URL
+
+### Frontend → Vercel
+
+1. Sign in at [vercel.com](https://vercel.com) with GitHub
+2. **Import** the same repo
+3. Set **Root Directory** → `frontend`
+4. Add one env var: `NEXT_PUBLIC_API_URL` = your Railway backend URL
+5. Deploy — Vercel auto-detects Next.js
 
 ## Environment Variables
 

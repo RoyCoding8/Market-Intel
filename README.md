@@ -89,6 +89,13 @@ export BRIGHT_DATA_PASSWORD=...
 cd backend && uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
+**Optional extras:**
+
+```bash
+uv pip install -e ".[aws]"   # AWS Bedrock / SageMaker support (boto3 + botocore)
+uv pip install -e ".[pdf]"   # PDF report export (reportlab)
+```
+
 **Frontend (Node 18+):**
 
 ```bash
@@ -164,7 +171,7 @@ The `/api/jobs/{job_id}/stream` endpoint emits named SSE events:
 
 See `.env.example` for the full list of 20+ LLM provider configurations and Bright Data options. If Bright Data credentials are absent, the scraper falls back to direct `httpx` for local development.
 
-`render.yaml` defines both backend and frontend services. Update the frontend service's `NEXT_PUBLIC_API_URL` if Render assigns a different backend URL.
+Deploy the backend to [Railway](https://railway.app) and the frontend to [Vercel](https://vercel.com). Set `NEXT_PUBLIC_API_URL` on Vercel to the Railway backend URL, and `CORS_ORIGINS` on Railway to the Vercel frontend URL.
 
 ---
 
@@ -267,7 +274,7 @@ market-intelligence-agent/
     PIPELINE.md          Pipeline deep dive (scrape → analyze → verify → report stages)
     PROVIDERS.md         LLM provider configuration (20+ providers, structured output)
     SECURITY.md          Security model (SSRF defense, rate limiting, input sanitization)
-    DEPLOYMENT.md        Deployment guide (Docker, Render, local dev)
+    DEPLOYMENT.md        Deployment guide (Docker, Railway + Vercel, local dev)
     FRONTEND.md          Frontend architecture (state management, SSE, styling, testing)
     API.md               Full API reference (all endpoints, request/response schemas)
   docker-compose.yml     Backend + frontend services with health checks
@@ -305,7 +312,7 @@ For detailed technical documentation:
 - **[Pipeline](docs/PIPELINE.md)** — Four-stage pipeline deep dive: scraping, analysis, verification, report generation, cancellation, error handling
 - **[Providers](docs/PROVIDERS.md)** — 20+ LLM provider configurations, litellm routing, instructor structured output, extraction models
 - **[Security](docs/SECURITY.md)** — Multi-layer SSRF defense, rate limiting, input sanitization, export security, CORS, error sanitization
-- **[Deployment](docs/DEPLOYMENT.md)** — Docker Compose, Render.com, local development, CI/CD, SQLite considerations, scaling
+- **[Deployment](docs/DEPLOYMENT.md)** — Docker Compose, Railway + Vercel, local development, CI/CD, SQLite considerations, scaling
 - **[Frontend](docs/FRONTEND.md)** — React 19 + Next.js 16 architecture, Zustand state, SSE client, styling, testing
 - **[API Reference](docs/API.md)** — All endpoints with request/response schemas, SSE events, rate limiting headers
 
