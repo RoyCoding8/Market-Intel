@@ -19,8 +19,8 @@ _client = instructor.from_litellm(acompletion)
 
 
 def _default_model() -> str:
-    """Return the configured LLM model, falling back to OpenAI GPT-4o."""
-    return os.getenv("LLM_MODEL", "openai/gpt-4o")
+    """Return the configured LLM model, falling back to Xiaomi MiMo."""
+    return os.getenv("LLM_MODEL", "openai/mimo-v2.5-pro")
 
 
 async def extract_structured(

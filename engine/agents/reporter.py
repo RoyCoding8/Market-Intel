@@ -216,7 +216,7 @@ def _fallback_report(request: ReportRequest, reason: str) -> ReportOutput:
 
 async def generate_report(
     request: ReportRequest,
-    model: str = "openai/gpt-4o",
+    model: str = "openai/mimo-v2.5-pro",
 ) -> ReportOutput:
     """Generate a structured intelligence report from analysis and verification results."""
     prompt = _REPORT_PROMPT.format(

@@ -80,7 +80,7 @@ docker-compose up --build
 uv venv
 uv pip install -r backend/requirements.txt -r engine/requirements.txt
 
-export LLM_MODEL=openai/gpt-4o
+export LLM_MODEL=openai/mimo-v2.5-pro
 export OPENAI_API_KEY=sk-...
 export OPENAI_API_BASE=https://opengateway.gitlawb.com/v1
 export BRIGHT_DATA_CUSTOMER_ID=...
@@ -146,7 +146,7 @@ The `/api/jobs/{job_id}/stream` endpoint emits named SSE events:
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `LLM_MODEL` | No | `openai/gpt-4o` | Model in litellm format: `provider/model-name` |
+| `LLM_MODEL` | No | `openai/mimo-v2.5-pro` | Model in litellm format: `provider/model-name` |
 | `OPENAI_API_KEY` | Yes for Mimo/OpenAI-compatible | — | API key for the configured LLM endpoint |
 | `OPENAI_API_BASE` | Yes for Mimo/OpenAI-compatible | — | OpenAI-compatible base URL such as the Opengateway Gitlawb endpoint |
 | `BRIGHT_DATA_CUSTOMER_ID` | Prize eligibility | — | Bright Data customer id for Web Unlocker proxy auth |

@@ -146,7 +146,7 @@ async def _verify_single_claim(claim: Claim, source_text: str, model: str) -> Ve
 
 async def verify_claims(
     request: VerificationRequest,
-    model: str = "openai/gpt-4o",
+    model: str = "openai/mimo-v2.5-pro",
     *,
     cancelled_check=None,
 ) -> VerificationOutput:

@@ -26,7 +26,7 @@ class PipelineContext(BaseModel):
     focus_areas: list[str] = Field(default_factory=lambda: ["pricing", "features", "team", "news"])
     state: PipelineState = PipelineState.INIT
     max_pages_per_competitor: int = Field(default=20, ge=1, le=100)
-    llm_model: str = "openai/gpt-4o"
+    llm_model: str = "openai/mimo-v2.5-pro"
     verification_passes: int = Field(default=2, ge=1, le=10)
 
 class ScrapeRequest(BaseModel):

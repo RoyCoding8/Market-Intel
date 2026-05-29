@@ -20,6 +20,8 @@ _PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
+from backend.middleware.auth import ApiKeyMiddleware  # noqa: E402
+from backend.middleware.body_limit import BodyLimitMiddleware  # noqa: E402
 from backend.middleware.rate_limit import RateLimitMiddleware  # noqa: E402
 from backend.routes.analytics import router as analytics_router  # noqa: E402
 from backend.routes.health import router as health_router  # noqa: E402
@@ -117,11 +119,19 @@ def create_app(
     """Application factory."""
     app = FastAPI(
         title="Market Intelligence Agent",
-        version="0.2.0",
+        version="0.3.0",
         lifespan=lifespan,
     )
 
-    # Rate limiting (added before CORS so it runs first)
+    # ── Middleware stack (outermost first) ─────────────────────────────
+
+    # 1. API-key auth (when API_KEY env var is set)
+    app.add_middleware(ApiKeyMiddleware)
+
+    # 2. Request body size limit (default 1 MB)
+    app.add_middleware(BodyLimitMiddleware)
+
+    # 3. Rate limiting
     app.add_middleware(
         RateLimitMiddleware,
         general_limit=rate_limit_general,
@@ -129,7 +139,7 @@ def create_app(
         window=rate_limit_window,
     )
 
-    # CORS — controlled by CORS_ORIGINS
+    # 4. CORS — controlled by CORS_ORIGINS
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_cors_origins_from_env(),
@@ -138,13 +148,22 @@ def create_app(
         allow_headers=["*"],
     )
 
-    # Shared services stored on app.state
+    # ── Shared services stored on app.state ───────────────────────────
     app.state.database = Database(_database_path_from_env())
     app.state.job_manager = JobManager(app.state.database)
     app.state.event_store = EventStore()
     app.state.scheduler = SchedulerService()
     app.state.run_pipeline = _resolve_pipeline()
     app.state.background_tasks = set()
+
+    # Concurrent job cap — prevents resource exhaustion from parallel pipelines.
+    max_concurrent = int(os.getenv("MAX_CONCURRENT_JOBS", "5"))
+    app.state.job_semaphore = asyncio.Semaphore(max_concurrent)
+    logger.info("Concurrent job limit: %d", max_concurrent)
+
+    # Pipeline timeout (seconds).  0 = no timeout.
+    app.state.pipeline_timeout = int(os.getenv("PIPELINE_TIMEOUT_SECONDS", "600"))
+    logger.info("Pipeline timeout: %ds", app.state.pipeline_timeout)
 
     # Routes
     app.include_router(health_router)

@@ -70,7 +70,7 @@ docker compose up -d --build
 ### Required
 | Variable | Description |
 |----------|-------------|
-| `LLM_MODEL` | Model identifier (e.g., `openai/gpt-4o`) |
+| `LLM_MODEL` | Model identifier (e.g., `openai/mimo-v2.5-pro`) |
 | `OPENAI_API_KEY` | API key for the selected provider |
 
 ### Optional — Engine

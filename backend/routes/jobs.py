@@ -32,7 +32,7 @@ from contracts.events import AgentEvent, EventType
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["jobs"])
-DEFAULT_LLM_MODEL = "openai/gpt-4o"
+DEFAULT_LLM_MODEL = "openai/mimo-v2.5-pro"
 
 
 def _env_int(name: str, default: int, *, min_value: int, max_value: int) -> int:
@@ -185,50 +185,69 @@ async def _run_job_background(
     request: Request,
 ) -> None:
     """Background task: run the engine pipeline, update job state, and
-    publish lifecycle events to the event store."""
+    publish lifecycle events to the event store.
+
+    Respects the concurrent-job semaphore and pipeline timeout configured
+    in app.state.
+    """
 
     job_mgr: Any = request.app.state.job_manager
     event_store: Any = request.app.state.event_store
     run_pipeline = request.app.state.run_pipeline
+    semaphore: asyncio.Semaphore = request.app.state.job_semaphore
+    timeout: int = request.app.state.pipeline_timeout
 
-    try:
-        # Mark running — pipeline emits JOB_STARTED itself, so we don't duplicate here
-        await job_mgr.update_status(job_id, JobStatus.SCRAPING)
+    async with semaphore:
+        try:
+            # Mark running
+            await job_mgr.update_status(job_id, JobStatus.SCRAPING)
 
-        # Run the engine pipeline with cancellation support
-        engine_emitter = _JobProgressEmitter(job_mgr, event_store)
-        report_output = await run_pipeline(
-            ctx, engine_emitter,
-            cancelled_check=lambda: job_mgr.is_cancelled(job_id),
-        )
+            # Run the engine pipeline with cancellation support and timeout
+            engine_emitter = _JobProgressEmitter(job_mgr, event_store)
+            coro = run_pipeline(
+                ctx, engine_emitter,
+                cancelled_check=lambda: job_mgr.is_cancelled(job_id),
+            )
 
-        # Check if the job was cancelled while running
-        if job_mgr.is_cancelled(job_id):
-            await _emit(event_store, job_id, EventType.JOB_CANCELLED, "Job cancelled during pipeline execution")
-        elif ctx.state == PipelineState.ERROR:
-            await job_mgr.set_error(job_id, report_output.executive_summary)
-            await _emit(event_store, job_id, EventType.JOB_FAILED, report_output.executive_summary)
-        else:
-            # Convert ReportOutput to IntelligenceReport and save it
-            if report_output is not None:
-                intel_report = _report_output_to_intelligence_report(
-                    job_id, report_output, ctx.competitor_urls,
-                    verification_passes=ctx.verification_passes,
-                )
-                await job_mgr.set_report(job_id, intel_report)
+            if timeout > 0:
+                try:
+                    report_output = await asyncio.wait_for(coro, timeout=timeout)
+                except asyncio.TimeoutError:
+                    error_msg = f"Pipeline timed out after {timeout}s"
+                    logger.error("%s for job %s", error_msg, job_id)
+                    await job_mgr.set_error(job_id, error_msg)
+                    await _emit(event_store, job_id, EventType.JOB_FAILED, error_msg)
+                    return
+            else:
+                report_output = await coro
 
-            # Mark completed
-            await job_mgr.update_status(job_id, JobStatus.COMPLETED)
-            await job_mgr.update_progress(job_id, progress=1.0, current_step="completed")
-            await _emit(event_store, job_id, EventType.JOB_COMPLETED, "Job completed")
-    except Exception as exc:
-        logger.exception("Pipeline failed for job %s", job_id)
-        # Sanitize: don't leak internal details to API consumers
-        error_msg = f"Pipeline failed: {type(exc).__name__}"
-        await job_mgr.set_error(job_id, error_msg)
-        await _emit(event_store, job_id, EventType.JOB_FAILED, error_msg)
-    finally:
-        await event_store.close_job(job_id)
+            # Check if the job was cancelled while running
+            if job_mgr.is_cancelled(job_id):
+                await _emit(event_store, job_id, EventType.JOB_CANCELLED, "Job cancelled during pipeline execution")
+            elif ctx.state == PipelineState.ERROR:
+                await job_mgr.set_error(job_id, report_output.executive_summary)
+                await _emit(event_store, job_id, EventType.JOB_FAILED, report_output.executive_summary)
+            else:
+                # Convert ReportOutput to IntelligenceReport and save it
+                if report_output is not None:
+                    intel_report = _report_output_to_intelligence_report(
+                        job_id, report_output, ctx.competitor_urls,
+                        verification_passes=ctx.verification_passes,
+                    )
+                    await job_mgr.set_report(job_id, intel_report)
+
+                # Mark completed
+                await job_mgr.update_status(job_id, JobStatus.COMPLETED)
+                await job_mgr.update_progress(job_id, progress=1.0, current_step="completed")
+                await _emit(event_store, job_id, EventType.JOB_COMPLETED, "Job completed")
+        except Exception as exc:
+            logger.exception("Pipeline failed for job %s", job_id)
+            # Sanitize: don't leak internal details to API consumers
+            error_msg = f"Pipeline failed: {type(exc).__name__}"
+            await job_mgr.set_error(job_id, error_msg)
+            await _emit(event_store, job_id, EventType.JOB_FAILED, error_msg)
+        finally:
+            await event_store.close_job(job_id)
 
 
 async def _emit(event_store: Any, job_id: str, event_type: EventType, message: str,

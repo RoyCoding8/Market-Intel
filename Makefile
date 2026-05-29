@@ -6,7 +6,7 @@ help: ## Show this help message
 install: install-backend install-frontend ## Install all dependencies
 
 install-backend: ## Install Python dependencies with uv
-	uv sync
+	uv sync --extra dev
 
 install-frontend: ## Install frontend dependencies
 	cd frontend && npm ci
@@ -14,14 +14,14 @@ install-frontend: ## Install frontend dependencies
 test: test-backend test-engine ## Run all tests
 
 test-backend: ## Run backend tests
-	uv run python -m pytest backend/tests/ -v --tb=short
+	uv run --extra dev python -m pytest backend/tests/ -v --tb=short
 
 test-engine: ## Run engine tests
-	uv run python -m pytest engine/tests/ -v --tb=short
+	uv run --extra dev python -m pytest engine/tests/ -v --tb=short
 
 test-integration: ## Run integration tests
 	@if [ -d "integration" ]; then \
-		uv run python -m pytest integration/test_adversarial.py -v --tb=short; \
+		uv run --extra dev python -m pytest integration/test_adversarial.py -v --tb=short; \
 	else \
 		echo "No integration tests found"; \
 	fi

@@ -18,12 +18,12 @@ VALID_PAYLOAD = {
 
 
 def test_pipeline_kwargs_read_environment(monkeypatch):
-    monkeypatch.setenv("LLM_MODEL", "openai/gpt-4o")
+    monkeypatch.setenv("LLM_MODEL", "openai/mimo-v2.5-pro")
     monkeypatch.setenv("MAX_PAGES_PER_COMPETITOR", "7")
     monkeypatch.setenv("VERIFICATION_PASSES", "4")
 
     assert _configured_pipeline_kwargs() == {
-        "llm_model": "openai/gpt-4o",
+        "llm_model": "openai/mimo-v2.5-pro",
         "max_pages_per_competitor": 7,
         "verification_passes": 4,
     }

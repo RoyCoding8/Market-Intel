@@ -11,7 +11,7 @@ extract_structured(prompt, response_model)
 instructor.from_litellm(acompletion)
     │
     ▼
-litellm.acompletion(model="openai/gpt-4o", messages=[...])
+litellm.acompletion(model="openai/mimo-v2.5-pro", messages=[...])
     │
     ▼
 Provider API (OpenAI, Anthropic, Google, etc.)
@@ -23,7 +23,7 @@ litellm reads the `LLM_MODEL` environment variable (format: `provider/model-name
 
 ### OpenAI
 ```bash
-LLM_MODEL=openai/gpt-4o
+LLM_MODEL=openai/gpt-4o  # or any OpenAI model
 OPENAI_API_KEY=sk-...
 ```
 
@@ -87,6 +87,11 @@ OLLAMA_API_BASE=http://localhost:11434
 ```
 
 ### Xiaomi MiMo (via Opengateway)
+
+[Gitlawb Opengateway](https://gitlawb.com/opengateway) provides free, unlimited access to MiMo models.
+The `openai/` prefix tells litellm to use the OpenAI-compatible client — it is stripped before the request
+is sent, so Gitlawb receives just `mimo-v2.5-pro`.
+
 ```bash
 LLM_MODEL=openai/mimo-v2.5-pro
 OPENAI_API_KEY=ogw_live_...
@@ -94,12 +99,18 @@ OPENAI_API_BASE=https://opengateway.gitlawb.com/v1
 ```
 
 ### Xiaomi MiMo (direct)
+
+Native litellm provider — uses Xiaomi's API directly.
+
 ```bash
 LLM_MODEL=xiaomi_mimo/mimo-v2.5-pro
 XIAOMI_MIMO_API_KEY=...
 ```
 
 ### Any OpenAI-compatible endpoint
+
+For self-hosted models (vLLM, Ollama with OpenAI mode, etc.). The `openai/` prefix is required for litellm routing.
+
 ```bash
 LLM_MODEL=openai/your-model-name
 OPENAI_API_KEY=sk-no-key-needed
@@ -110,7 +121,7 @@ OPENAI_API_BASE=http://localhost:8080/v1
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `LLM_MODEL` | Model identifier in litellm format | `openai/gpt-4o` |
+| `LLM_MODEL` | Model identifier in litellm format | `openai/mimo-v2.5-pro` |
 | `LLM_TIMEOUT_SECONDS` | Per-call timeout | `60` |
 
 Each provider has its own API key environment variable. litellm automatically resolves the correct key based on the model prefix. See `.env.example` for the full list.
