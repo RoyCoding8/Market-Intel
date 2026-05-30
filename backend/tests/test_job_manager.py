@@ -12,12 +12,10 @@ from contracts.api import (
 )
 from backend.services.job_manager import JobManager
 
-
 def _make_request() -> CreateJobRequest:
     return CreateJobRequest(
         competitors=[CompetitorInput(url="https://example.com")],
     )
-
 
 @pytest.mark.asyncio
 async def test_create_and_get(job_manager: JobManager):
@@ -29,11 +27,9 @@ async def test_create_and_get(job_manager: JobManager):
     assert fetched is not None
     assert fetched.job_id == "j1"
 
-
 @pytest.mark.asyncio
 async def test_get_nonexistent(job_manager: JobManager):
     assert await job_manager.get_job("nope") is None
-
 
 @pytest.mark.asyncio
 async def test_list_jobs(job_manager: JobManager):
@@ -42,7 +38,6 @@ async def test_list_jobs(job_manager: JobManager):
     jobs = await job_manager.list_jobs()
     ids = {j.job_id for j in jobs}
     assert ids == {"a", "b"}
-
 
 @pytest.mark.asyncio
 async def test_update_status_sets_started_at(job_manager: JobManager):
@@ -53,7 +48,6 @@ async def test_update_status_sets_started_at(job_manager: JobManager):
     assert rec.status == JobStatus.SCRAPING
     assert rec.started_at is not None
 
-
 @pytest.mark.asyncio
 async def test_update_status_sets_completed_at(job_manager: JobManager):
     await job_manager.create_job("j3", _make_request())
@@ -62,7 +56,6 @@ async def test_update_status_sets_completed_at(job_manager: JobManager):
     rec = await job_manager.get_job("j3")
     assert rec is not None
     assert rec.completed_at is not None
-
 
 @pytest.mark.asyncio
 async def test_update_progress(job_manager: JobManager):
@@ -77,7 +70,6 @@ async def test_update_progress(job_manager: JobManager):
     assert rec.pages_scraped == 10
     assert rec.findings_count == 3
 
-
 @pytest.mark.asyncio
 async def test_update_progress_clamps(job_manager: JobManager):
     await job_manager.create_job("j5", _make_request())
@@ -91,7 +83,6 @@ async def test_update_progress_clamps(job_manager: JobManager):
     assert rec is not None
     assert rec.progress == 0.0
 
-
 @pytest.mark.asyncio
 async def test_set_error(job_manager: JobManager):
     await job_manager.create_job("j6", _make_request())
@@ -101,7 +92,6 @@ async def test_set_error(job_manager: JobManager):
     assert rec.status == JobStatus.FAILED
     assert rec.error == "boom"
     assert rec.completed_at is not None
-
 
 @pytest.mark.asyncio
 async def test_set_and_get_report(job_manager: JobManager):
@@ -119,12 +109,10 @@ async def test_set_and_get_report(job_manager: JobManager):
     assert fetched is not None
     assert fetched.id == "r1"
 
-
 @pytest.mark.asyncio
 async def test_get_report_none_when_not_set(job_manager: JobManager):
     await job_manager.create_job("j8", _make_request())
     assert await job_manager.get_report("j8") is None
-
 
 @pytest.mark.asyncio
 async def test_update_nonexistent_job_is_noop(job_manager: JobManager):

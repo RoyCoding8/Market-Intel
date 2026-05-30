@@ -8,7 +8,6 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-
 class EventType(str, Enum):
     JOB_STARTED = "job.started"
     JOB_COMPLETED = "job.completed"
@@ -29,7 +28,6 @@ class EventType(str, Enum):
     PROGRESS = "progress"
     HEARTBEAT = "heartbeat"
 
-
 class AgentEvent(BaseModel):
     """Base event model for all SSE events."""
     event_id: str
@@ -40,7 +38,6 @@ class AgentEvent(BaseModel):
     message: str
     data: Optional[dict] = None
 
-
 class ProgressData(BaseModel):
     current_step: str
     step_number: int
@@ -49,13 +46,11 @@ class ProgressData(BaseModel):
     pages_scraped: int = 0
     findings_count: int = 0
 
-
 class ScrapedPageEvent(BaseModel):
     url: str
     page_type: str
     title: Optional[str] = None
     content_length: int
-
 
 class FindingEvent(BaseModel):
     finding_id: str
@@ -64,20 +59,17 @@ class FindingEvent(BaseModel):
     confidence: str
     summary: str
 
-
 class VerificationEvent(BaseModel):
     finding_id: str
     verified: bool
     confidence: str
     reason: Optional[str] = None
 
-
 class ReportEvent(BaseModel):
     report_id: str
     findings_count: int
     total_citations: int
     verification_passes: int
-
 
 class ErrorEvent(BaseModel):
     error_type: str

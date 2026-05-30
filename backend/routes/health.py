@@ -19,7 +19,6 @@ _PROVIDER_KEY_VARS = [
     "DATABRICKS_API_KEY", "XIAOMI_MIMO_API_KEY",
 ]
 
-
 def _llm_configured() -> bool:
     """Return True if an LLM model is configured and at least one provider key is set."""
     model = os.getenv("LLM_MODEL", "")
@@ -33,14 +32,12 @@ def _llm_configured() -> bool:
         return True
     return any(os.getenv(var) for var in _PROVIDER_KEY_VARS)
 
-
 def _bright_data_configured() -> bool:
     """Return True if all three Bright Data credentials are set."""
     return all(
         os.getenv(var, "").strip()
         for var in ("BRIGHT_DATA_CUSTOMER_ID", "BRIGHT_DATA_ZONE", "BRIGHT_DATA_PASSWORD")
     )
-
 
 @router.get("/api/health", response_model=HealthResponse)
 async def health_check(request: Request) -> HealthResponse:

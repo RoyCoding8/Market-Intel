@@ -7,7 +7,6 @@ from httpx import AsyncClient
 
 from backend.routes.jobs import _configured_pipeline_kwargs
 
-
 VALID_PAYLOAD = {
     "competitors": [
         {"url": "https://example.com", "name": "ExampleCorp", "focus_areas": ["pricing"]},
@@ -15,7 +14,6 @@ VALID_PAYLOAD = {
     ],
     "query": "pricing changes",
 }
-
 
 def test_pipeline_kwargs_read_environment(monkeypatch):
     monkeypatch.setenv("LLM_MODEL", "openai/mimo-v2.5-pro")
@@ -28,7 +26,6 @@ def test_pipeline_kwargs_read_environment(monkeypatch):
         "verification_passes": 4,
     }
 
-
 @pytest.mark.asyncio
 async def test_create_job(client: AsyncClient):
     resp = await client.post("/api/jobs", json=VALID_PAYLOAD)
@@ -38,12 +35,10 @@ async def test_create_job(client: AsyncClient):
     assert body["status"] == "pending"
     assert body["message"]
 
-
 @pytest.mark.asyncio
 async def test_create_job_requires_competitors(client: AsyncClient):
     resp = await client.post("/api/jobs", json={"competitors": []})
     assert resp.status_code == 422  # validation error
-
 
 @pytest.mark.asyncio
 async def test_list_jobs(client: AsyncClient):
@@ -57,7 +52,6 @@ async def test_list_jobs(client: AsyncClient):
     assert body["total"] >= 2
     assert len(body["jobs"]) >= 2
 
-
 @pytest.mark.asyncio
 async def test_get_job(client: AsyncClient):
     create_resp = await client.post("/api/jobs", json=VALID_PAYLOAD)
@@ -68,12 +62,10 @@ async def test_get_job(client: AsyncClient):
     body = resp.json()
     assert body["job_id"] == job_id
 
-
 @pytest.mark.asyncio
 async def test_get_job_not_found(client: AsyncClient):
     resp = await client.get("/api/jobs/nonexistent-id")
     assert resp.status_code == 404
-
 
 @pytest.mark.asyncio
 async def test_get_report_not_completed(client: AsyncClient):
@@ -83,7 +75,6 @@ async def test_get_report_not_completed(client: AsyncClient):
     resp = await client.get(f"/api/jobs/{job_id}/report")
     # Job is pending/running, not completed
     assert resp.status_code in (400, 404)
-
 
 @pytest.mark.asyncio
 async def test_get_report_nonexistent_job(client: AsyncClient):

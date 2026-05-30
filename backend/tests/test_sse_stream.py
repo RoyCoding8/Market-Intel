@@ -11,17 +11,14 @@ from httpx import AsyncClient
 from contracts.api import CompetitorInput, CreateJobRequest
 from contracts.events import AgentEvent, EventType
 
-
 VALID_PAYLOAD = {
     "competitors": [{"url": "https://example.com", "name": "Ex"}],
 }
-
 
 @pytest.mark.asyncio
 async def test_stream_404_for_unknown_job(client: AsyncClient):
     resp = await client.get("/api/jobs/nonexistent/stream")
     assert resp.status_code == 404
-
 
 @pytest.mark.asyncio
 async def test_stream_receives_events(client: AsyncClient, app):

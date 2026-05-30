@@ -22,7 +22,6 @@ from contracts.events import AgentEvent, EventType
 from engine.emitter import EventEmitter
 from engine.pipeline import run_pipeline
 
-
 class InMemoryEmitter(EventEmitter):
     """Test emitter that collects all events in memory."""
 
@@ -31,7 +30,6 @@ class InMemoryEmitter(EventEmitter):
 
     async def emit(self, event: AgentEvent) -> None:
         self.events.append(event)
-
 
 def _make_ctx(**overrides) -> PipelineContext:
     defaults = {
@@ -45,7 +43,6 @@ def _make_ctx(**overrides) -> PipelineContext:
     }
     defaults.update(overrides)
     return PipelineContext(**defaults)
-
 
 def _mock_scrape_result(url: str = "https://acme.com", name: str = "Acme") -> ScrapeResult:
     return ScrapeResult(
@@ -64,7 +61,6 @@ def _mock_scrape_result(url: str = "https://acme.com", name: str = "Acme") -> Sc
         total_pages_attempted=1,
     )
 
-
 def _mock_analysis_result(url: str = "https://acme.com", name: str = "Acme") -> AnalysisResult:
     return AnalysisResult(
         competitor_url=url,
@@ -82,7 +78,6 @@ def _mock_analysis_result(url: str = "https://acme.com", name: str = "Acme") -> 
         ],
         pricing_data={"plans": [{"name": "Starter", "price": "$9/mo"}]},
     )
-
 
 def _mock_verification_output() -> VerificationOutput:
     return VerificationOutput(
@@ -103,7 +98,6 @@ def _mock_verification_output() -> VerificationOutput:
         passes_completed=2,
     )
 
-
 def _mock_report_output() -> ReportOutput:
     return ReportOutput(
         executive_summary="Acme offers competitive pricing.",
@@ -119,7 +113,6 @@ def _mock_report_output() -> ReportOutput:
         recommendations=["Match Acme's pricing"],
         total_sources=1,
     )
-
 
 @pytest.mark.asyncio
 async def test_pipeline_full_run():
@@ -154,7 +147,6 @@ async def test_pipeline_full_run():
     assert EventType.REPORT_GENERATED in event_types
     assert EventType.JOB_COMPLETED in event_types
 
-
 @pytest.mark.asyncio
 async def test_pipeline_emits_page_scraped_events():
     """Each scraped page should emit a page.scraped event."""
@@ -179,7 +171,6 @@ async def test_pipeline_emits_page_scraped_events():
     assert page_events[0].data is not None
     assert "url" in page_events[0].data
 
-
 @pytest.mark.asyncio
 async def test_pipeline_handles_scrape_failure():
     """Pipeline should fail gracefully when scraping produces no results."""
@@ -200,7 +191,6 @@ async def test_pipeline_handles_scrape_failure():
     assert "failed" in result.executive_summary.lower()
     assert EventType.JOB_FAILED in [e.event_type for e in emitter.events]
 
-
 @pytest.mark.asyncio
 async def test_pipeline_handles_analysis_failure():
     """Pipeline should fail when analysis produces no results."""
@@ -217,7 +207,6 @@ async def test_pipeline_handles_analysis_failure():
         await run_pipeline(ctx, emitter)
 
     assert ctx.state == PipelineState.ERROR
-
 
 @pytest.mark.asyncio
 async def test_pipeline_handles_verification_failure():
@@ -241,7 +230,6 @@ async def test_pipeline_handles_verification_failure():
     # Pipeline should still complete (verification failure is non-fatal)
     assert result.executive_summary == "Acme offers competitive pricing."
 
-
 @pytest.mark.asyncio
 async def test_pipeline_handles_report_failure():
     """Pipeline should return a minimal report on report generation failure."""
@@ -263,7 +251,6 @@ async def test_pipeline_handles_report_failure():
 
     assert "failed" in result.executive_summary.lower()
     assert ctx.state == PipelineState.ERROR  # Report failure is an error state
-
 
 @pytest.mark.asyncio
 async def test_pipeline_multiple_competitors():
@@ -292,7 +279,6 @@ async def test_pipeline_multiple_competitors():
 
     assert mock_scrape.call_count == 2
     assert mock_analyze.call_count == 2
-
 
 @pytest.mark.asyncio
 async def test_pipeline_state_transitions():

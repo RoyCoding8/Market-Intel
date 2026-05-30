@@ -14,8 +14,6 @@ from engine.llm import extract_structured
 
 logger = logging.getLogger(__name__)
 
-
-
 class _VerificationJudgement(BaseModel):
     verified: bool
     confidence: float = Field(..., ge=0.0, le=1.0)
@@ -26,8 +24,6 @@ class _VerificationJudgement(BaseModel):
     exact_match: bool = False
     semantic_match: bool = False
     temporal_accuracy: Optional[str] = None
-
-
 
 _VERIFY_PROMPT = """You are a senior fact-checker verifying an intelligence claim against its source text.
 
@@ -64,8 +60,6 @@ Instructions:
 5. List any concerns (out-of-context, outdated, vague, etc.)
 6. Be conservative — prefer flagging over false verification."""
 
-
-
 def _confidence_level(score: float) -> str:
     if score >= 0.9:
         return "high"
@@ -74,7 +68,6 @@ def _confidence_level(score: float) -> str:
     if score >= 0.5:
         return "low"
     return "very_low"
-
 
 def _find_source_text(claim: Claim, scrape_results: list[ScrapeResult]) -> str:
     for result in scrape_results:
@@ -88,9 +81,7 @@ def _find_source_text(claim: Claim, scrape_results: list[ScrapeResult]) -> str:
                 return longest.html_text[:10000]
     return "[Source text not found in scrape results]"
 
-
-_MIN_QUOTE_LENGTH = 20  # minimum characters for a quote to be considered meaningful
-
+_MIN_QUOTE_LENGTH = 20
 
 def _quote_in_text(quote: str | None, text: str) -> bool:
     if not quote:
@@ -98,7 +89,6 @@ def _quote_in_text(quote: str | None, text: str) -> bool:
     norm_quote = re.sub(r"\s+", " ", quote).strip().lower()
     norm_text = re.sub(r"\s+", " ", text).lower()
     return len(norm_quote) >= _MIN_QUOTE_LENGTH and norm_quote in norm_text
-
 
 async def _verify_single_claim(claim: Claim, source_text: str, model: str) -> VerificationResult:
     if source_text.startswith("[Source text not found"):
@@ -139,8 +129,6 @@ async def _verify_single_claim(claim: Claim, source_text: str, model: str) -> Ve
         confidence_level=_confidence_level(confidence), reason=j.reason,
         supporting_quote=supporting_quote, source_url=claim.source_url, concerns=concerns,
     )
-
-
 
 async def verify_claims(
     request: VerificationRequest,

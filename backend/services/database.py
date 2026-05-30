@@ -67,7 +67,6 @@ CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
 CREATE INDEX IF NOT EXISTS idx_jobs_created_at ON jobs(created_at);
 """
 
-
 class Database:
     """Async SQLite database for persisting jobs, events, and schedules."""
 
@@ -114,7 +113,6 @@ class Database:
         if self._db is None:  # pragma: no cover - defensive guard
             raise RuntimeError("Database failed to initialize")
         return self._db
-
 
     async def create_job(self, job_id: str, request: CreateJobRequest) -> None:
         db = await self._connection()
@@ -189,7 +187,6 @@ class Database:
                 logger.warning("Corrupted report_json for job %s: %s", job_id, exc)
                 return None
 
-
     async def save_event(
         self,
         job_id: str,
@@ -219,7 +216,6 @@ class Database:
         ) as cursor:
             rows = await cursor.fetchall()
             return [dict(r) for r in rows]
-
 
     async def get_dashboard_stats(self) -> DashboardStats:
         db = await self._connection()
@@ -318,7 +314,6 @@ class Database:
 
         async with db.execute(sql, params) as cur:
             return [TrendDataPoint(date=r[0], value=float(r[1] or 0)) async for r in cur]
-
 
     async def create_schedule(
         self,

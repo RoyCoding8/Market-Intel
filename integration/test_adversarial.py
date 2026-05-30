@@ -24,14 +24,11 @@ if _PROJECT_ROOT not in sys.path:
 
 from backend.main import create_app  # noqa: E402
 
-
 # ── Fixtures ────────────────────────────────────────────────────────────
-
 
 @pytest.fixture
 def anyio_backend():
     return "asyncio"
-
 
 @pytest_asyncio.fixture
 async def app(tmp_path, monkeypatch):
@@ -41,7 +38,6 @@ async def app(tmp_path, monkeypatch):
     async with application.router.lifespan_context(application):
         yield application
 
-
 @pytest_asyncio.fixture
 async def client(app) -> AsyncClient:
     """Async HTTP client bound to the test app."""
@@ -49,9 +45,7 @@ async def client(app) -> AsyncClient:
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
-
 # ── 1. Empty / Missing Input ────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_post_empty_competitors_list(client: AsyncClient):
@@ -59,20 +53,17 @@ async def test_post_empty_competitors_list(client: AsyncClient):
     resp = await client.post("/api/jobs", json={"competitors": []})
     assert resp.status_code == 422, f"Expected 422, got {resp.status_code}"
 
-
 @pytest.mark.asyncio
 async def test_post_missing_competitors_field(client: AsyncClient):
     """POST /api/jobs without competitors field should be rejected."""
     resp = await client.post("/api/jobs", json={"query": "pricing"})
     assert resp.status_code == 422
 
-
 @pytest.mark.asyncio
 async def test_post_empty_body(client: AsyncClient):
     """POST /api/jobs with empty JSON body should be rejected."""
     resp = await client.post("/api/jobs", json={})
     assert resp.status_code == 422
-
 
 @pytest.mark.asyncio
 async def test_post_competitor_missing_url(client: AsyncClient):
@@ -83,13 +74,11 @@ async def test_post_competitor_missing_url(client: AsyncClient):
     )
     assert resp.status_code == 422
 
-
 @pytest.mark.asyncio
 async def test_get_nonexistent_job(client: AsyncClient):
     """GET /api/jobs/nonexistent-id should return 404."""
     resp = await client.get("/api/jobs/nonexistent-id")
     assert resp.status_code == 404
-
 
 @pytest.mark.asyncio
 async def test_get_report_nonexistent_job(client: AsyncClient):
@@ -97,9 +86,7 @@ async def test_get_report_nonexistent_job(client: AsyncClient):
     resp = await client.get("/api/jobs/nonexistent-id/report")
     assert resp.status_code == 404
 
-
 # ── 2. Malformed Data ───────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_post_malformed_json(client: AsyncClient):
@@ -111,7 +98,6 @@ async def test_post_malformed_json(client: AsyncClient):
     )
     assert resp.status_code == 422
 
-
 @pytest.mark.asyncio
 async def test_post_wrong_type_competitors(client: AsyncClient):
     """POST /api/jobs with competitors as a string instead of list."""
@@ -120,7 +106,6 @@ async def test_post_wrong_type_competitors(client: AsyncClient):
         json={"competitors": "not-a-list"},
     )
     assert resp.status_code == 422
-
 
 @pytest.mark.asyncio
 async def test_post_wrong_type_url(client: AsyncClient):
@@ -133,7 +118,6 @@ async def test_post_wrong_type_url(client: AsyncClient):
     # The key test is that it doesn't crash
     assert resp.status_code in (201, 422)
 
-
 @pytest.mark.asyncio
 async def test_post_very_long_url(client: AsyncClient):
     """POST /api/jobs with a very long URL (>2KB) — should be rejected
@@ -145,7 +129,6 @@ async def test_post_very_long_url(client: AsyncClient):
     )
     assert resp.status_code == 422, f"Expected 422 (URL too long), got {resp.status_code}"
 
-
 @pytest.mark.asyncio
 async def test_post_special_characters_in_url(client: AsyncClient):
     """POST /api/jobs with special characters in URL — scheme validation."""
@@ -155,7 +138,6 @@ async def test_post_special_characters_in_url(client: AsyncClient):
     )
     # Valid https URL with query params — should be accepted
     assert resp.status_code == 201
-
 
 @pytest.mark.asyncio
 async def test_post_unicode_in_name(client: AsyncClient):
@@ -170,7 +152,6 @@ async def test_post_unicode_in_name(client: AsyncClient):
     )
     # Unicode allowed, RTL override chars kept (not HTML) — accepted
     assert resp.status_code == 201
-
 
 @pytest.mark.asyncio
 async def test_post_xss_in_name(client: AsyncClient):
@@ -188,7 +169,6 @@ async def test_post_xss_in_name(client: AsyncClient):
     job_resp = await client.get(f"/api/jobs/{job_id}")
     assert job_resp.status_code == 200
 
-
 @pytest.mark.asyncio
 async def test_post_null_bytes_in_name(client: AsyncClient):
     """POST /api/jobs with null bytes in competitor name — should be stripped."""
@@ -203,7 +183,6 @@ async def test_post_null_bytes_in_name(client: AsyncClient):
     # Null bytes are stripped by validator — should accept with sanitized name
     assert resp.status_code == 201
 
-
 @pytest.mark.asyncio
 async def test_post_extremely_long_name(client: AsyncClient):
     """POST /api/jobs with a very long competitor name — should be rejected (max_length=200)."""
@@ -216,14 +195,12 @@ async def test_post_extremely_long_name(client: AsyncClient):
     )
     assert resp.status_code == 422
 
-
 @pytest.mark.asyncio
 async def test_post_11_competitors_over_limit(client: AsyncClient):
     """POST /api/jobs with 11 competitors should be rejected (max_length=10)."""
     competitors = [{"url": f"https://example{i}.com"} for i in range(11)]
     resp = await client.post("/api/jobs", json={"competitors": competitors})
     assert resp.status_code == 422
-
 
 @pytest.mark.asyncio
 async def test_post_exactly_10_competitors(client: AsyncClient):
@@ -232,9 +209,7 @@ async def test_post_exactly_10_competitors(client: AsyncClient):
     resp = await client.post("/api/jobs", json={"competitors": competitors})
     assert resp.status_code == 201
 
-
 # ── 3. SSRF / Security ─────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_ssrf_localhost_url(client: AsyncClient):
@@ -244,7 +219,6 @@ async def test_ssrf_localhost_url(client: AsyncClient):
         json={"competitors": [{"url": "http://127.0.0.1:8000/api/jobs"}]},
     )
     assert resp.status_code == 422, "SSRF protection should block localhost"
-
 
 @pytest.mark.asyncio
 async def test_ssrf_aws_metadata_url(client: AsyncClient):
@@ -259,7 +233,6 @@ async def test_ssrf_aws_metadata_url(client: AsyncClient):
     )
     assert resp.status_code == 422, "SSRF protection should block metadata endpoint"
 
-
 @pytest.mark.asyncio
 async def test_ssrf_ipv6_loopback(client: AsyncClient):
     """POST /api/jobs with IPv6 loopback URL — SSRF protection blocks it."""
@@ -268,7 +241,6 @@ async def test_ssrf_ipv6_loopback(client: AsyncClient):
         json={"competitors": [{"url": "http://[::1]:8000/"}]},
     )
     assert resp.status_code == 422, "SSRF protection should block IPv6 loopback"
-
 
 @pytest.mark.asyncio
 async def test_ssrf_private_ip_range(client: AsyncClient):
@@ -280,7 +252,6 @@ async def test_ssrf_private_ip_range(client: AsyncClient):
         )
         assert resp.status_code == 422, f"SSRF protection should block {ip}"
 
-
 @pytest.mark.asyncio
 async def test_ssrf_file_scheme(client: AsyncClient):
     """POST /api/jobs with file:// URL — rejected (scheme validation)."""
@@ -289,7 +260,6 @@ async def test_ssrf_file_scheme(client: AsyncClient):
         json={"competitors": [{"url": "file:///etc/passwd"}]},
     )
     assert resp.status_code == 422, "Should reject file:// scheme"
-
 
 @pytest.mark.asyncio
 async def test_ssrf_javascript_scheme(client: AsyncClient):
@@ -300,7 +270,6 @@ async def test_ssrf_javascript_scheme(client: AsyncClient):
     )
     assert resp.status_code == 422, "Should reject javascript: scheme"
 
-
 @pytest.mark.asyncio
 async def test_ssrf_ftp_scheme(client: AsyncClient):
     """POST /api/jobs with ftp:// URL — rejected (scheme validation)."""
@@ -309,7 +278,6 @@ async def test_ssrf_ftp_scheme(client: AsyncClient):
         json={"competitors": [{"url": "ftp://internal-server/files/"}]},
     )
     assert resp.status_code == 422, "Should reject ftp:// scheme"
-
 
 @pytest.mark.asyncio
 async def test_ssrf_not_a_url(client: AsyncClient):
@@ -321,9 +289,7 @@ async def test_ssrf_not_a_url(client: AsyncClient):
         )
         assert resp.status_code == 422, f"Should reject bad URL: {bad_url!r}"
 
-
 # ── 4. Job Lifecycle ────────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_job_status_transitions(client: AsyncClient):
@@ -341,7 +307,6 @@ async def test_job_status_transitions(client: AsyncClient):
     assert status_resp.status_code == 200
     assert status_resp.json()["status"] in ("pending", "scraping", "failed")
 
-
 @pytest.mark.asyncio
 async def test_report_before_completion(client: AsyncClient):
     """GET /api/jobs/{id}/report before job completes should fail."""
@@ -354,7 +319,6 @@ async def test_report_before_completion(client: AsyncClient):
     # Immediately try to get report — job won't be completed yet
     report_resp = await client.get(f"/api/jobs/{job_id}/report")
     assert report_resp.status_code in (400, 404)
-
 
 @pytest.mark.asyncio
 async def test_list_jobs_returns_created_jobs(client: AsyncClient):
@@ -371,7 +335,6 @@ async def test_list_jobs_returns_created_jobs(client: AsyncClient):
     body = resp.json()
     assert body["total"] >= 3
     assert len(body["jobs"]) >= 3
-
 
 @pytest.mark.asyncio
 async def test_multiple_simultaneous_jobs(client: AsyncClient):
@@ -391,9 +354,7 @@ async def test_multiple_simultaneous_jobs(client: AsyncClient):
     for resp in responses:
         assert resp.status_code == 201
 
-
 # ── 5. SSE Edge Cases ───────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_sse_nonexistent_job(client: AsyncClient):
@@ -404,9 +365,7 @@ async def test_sse_nonexistent_job(client: AsyncClient):
     resp = await client.get("/api/jobs/nonexistent-id/stream")
     assert resp.status_code == 404
 
-
 # ── 6. Edge Cases in Pydantic Validation ────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_query_field_null(client: AsyncClient):
@@ -416,7 +375,6 @@ async def test_query_field_null(client: AsyncClient):
         json={"competitors": [{"url": "https://example.com"}], "query": None},
     )
     assert resp.status_code == 201
-
 
 @pytest.mark.asyncio
 async def test_focus_areas_empty_list(client: AsyncClient):
@@ -428,7 +386,6 @@ async def test_focus_areas_empty_list(client: AsyncClient):
         },
     )
     assert resp.status_code == 201
-
 
 @pytest.mark.asyncio
 async def test_focus_areas_invalid_values(client: AsyncClient):
@@ -446,7 +403,6 @@ async def test_focus_areas_invalid_values(client: AsyncClient):
     )
     # No validation on focus area values — accepted
     assert resp.status_code == 201
-
 
 @pytest.mark.asyncio
 async def test_nested_competitor_fields(client: AsyncClient):
@@ -467,7 +423,6 @@ async def test_nested_competitor_fields(client: AsyncClient):
     # Pydantic with default config may reject or ignore extra fields
     assert resp.status_code in (201, 422)
 
-
 @pytest.mark.asyncio
 async def test_schedule_custom_without_cron(client: AsyncClient):
     """POST /api/jobs with schedule CUSTOM but no cron_expression."""
@@ -479,7 +434,6 @@ async def test_schedule_custom_without_cron(client: AsyncClient):
         },
     )
     assert resp.status_code == 422
-
 
 @pytest.mark.asyncio
 async def test_schedule_invalid_frequency(client: AsyncClient):
@@ -493,9 +447,7 @@ async def test_schedule_invalid_frequency(client: AsyncClient):
     )
     assert resp.status_code == 422
 
-
 # ── 7. Job ID Edge Cases ────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_get_job_with_path_traversal_chars(client: AsyncClient):
@@ -504,14 +456,12 @@ async def test_get_job_with_path_traversal_chars(client: AsyncClient):
     # Should return 404 (job doesn't exist)
     assert resp.status_code == 404
 
-
 @pytest.mark.asyncio
 async def test_get_job_with_very_long_id(client: AsyncClient):
     """GET /api/jobs with a very long job ID."""
     long_id = "A" * 10000
     resp = await client.get(f"/api/jobs/{long_id}")
     assert resp.status_code == 404
-
 
 @pytest.mark.asyncio
 async def test_get_job_with_special_characters(client: AsyncClient):
@@ -523,9 +473,7 @@ async def test_get_job_with_special_characters(client: AsyncClient):
         # Should return 404, not crash
         assert resp.status_code in (404, 422), f"Unexpected status for job_id={special_id!r}: {resp.status_code}"
 
-
 # ── 8. Response Format Validation ───────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_create_job_response_format(client: AsyncClient):
@@ -541,7 +489,6 @@ async def test_create_job_response_format(client: AsyncClient):
     assert "message" in body
     assert isinstance(body["job_id"], str)
     assert len(body["job_id"]) > 0
-
 
 @pytest.mark.asyncio
 async def test_job_status_response_format(client: AsyncClient):
@@ -565,7 +512,6 @@ async def test_job_status_response_format(client: AsyncClient):
     assert 0.0 <= body["progress"] <= 1.0
     assert body["job_id"] == job_id
 
-
 @pytest.mark.asyncio
 async def test_list_jobs_response_format(client: AsyncClient):
     """Verify list jobs response has correct format."""
@@ -578,7 +524,6 @@ async def test_list_jobs_response_format(client: AsyncClient):
     assert isinstance(body["total"], int)
     assert body["total"] == len(body["jobs"])
 
-
 @pytest.mark.asyncio
 async def test_error_response_format(client: AsyncClient):
     """Verify 404 error response format."""
@@ -586,7 +531,6 @@ async def test_error_response_format(client: AsyncClient):
     assert resp.status_code == 404
     body = resp.json()
     assert "detail" in body
-
 
 @pytest.mark.asyncio
 async def test_validation_error_response_format(client: AsyncClient):

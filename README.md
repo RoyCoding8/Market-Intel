@@ -31,7 +31,7 @@ graph TD
 ```
 
 1. **Scraper** routes through Bright Data Web Unlocker when credentials are configured, visits competitor URLs, navigates to key pages (pricing, about, features, blog, jobs), extracts cleaned text
-2. **Analyzer** uses LLMs to extract structured claims and data (pricing plans, features, team info, news) from each page
+2. **Analyzer** uses LLMs to classify pages then extract structured claims and data (pricing plans, features, team info, news) from each page
 3. **Verifier** cross-checks every claim against the original scraped content in multi-pass verification with confidence scoring
 4. **Reporter** synthesizes verified findings into a structured intelligence report with comparison tables and recommendations
 
@@ -77,8 +77,7 @@ docker-compose up --build
 **Backend (Python 3.11+):**
 
 ```bash
-uv venv
-uv pip install -r backend/requirements.txt -r engine/requirements.txt
+uv sync --extra dev
 
 export LLM_MODEL=openai/mimo-v2.5-pro
 export OPENAI_API_KEY=sk-...
@@ -112,7 +111,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/health` | Liveness probe. Returns scheduler state and version. |
+| `GET` | `/api/health` | Liveness probe. Returns scheduler state, version, LLM/Bright Data config status. |
 | `POST` | `/api/jobs` | Create analysis job. Body: `CreateJobRequest` with competitor URLs. Returns `job_id`. |
 | `GET` | `/api/jobs` | List all jobs with status. |
 | `GET` | `/api/jobs/{job_id}` | Get job status (progress, step, counts). |
@@ -154,6 +153,8 @@ The `/api/jobs/{job_id}/stream` endpoint emits named SSE events:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `LLM_MODEL` | No | `openai/mimo-v2.5-pro` | Model in litellm format: `provider/model-name` |
+| `LLM_RPM` | No | `10` | Rate limit for sequential LLM calls (requests per minute) |
+| `MIN_PAGE_QUALITY` | No | `0.5` | Minimum page quality score to send to LLM (0.0-1.0) |
 | `OPENAI_API_KEY` | Yes for Mimo/OpenAI-compatible | — | API key for the configured LLM endpoint |
 | `OPENAI_API_BASE` | Yes for Mimo/OpenAI-compatible | — | OpenAI-compatible base URL such as the Opengateway Gitlawb endpoint |
 | `BRIGHT_DATA_CUSTOMER_ID` | Prize eligibility | — | Bright Data customer id for Web Unlocker proxy auth |
@@ -168,6 +169,11 @@ The `/api/jobs/{job_id}/stream` endpoint emits named SSE events:
 | `BACKEND_PORT` | No | `8000` | Backend port |
 | `DATABASE_URL` | No | `sqlite:///./data/market_intel.db` | SQLite path |
 | `CORS_ORIGINS` | No | `http://localhost:3000` | Comma-separated allowed origins |
+| `MAX_CONCURRENT_JOBS` | No | `5` | Max parallel analysis jobs |
+| `PIPELINE_TIMEOUT_SECONDS` | No | `600` | Per-job pipeline timeout (0 = no timeout) |
+| `LLM_RPM` | No | `10` | Rate limit for sequential LLM calls (requests per minute) |
+| `LITELLM_DEBUG` | No | `false` | Enable verbose litellm logging |
+| `IGNORE_ROBOTS_TXT` | No | `true` | Skip robots.txt checks |
 
 See `.env.example` for the full list of 20+ LLM provider configurations and Bright Data options. If Bright Data credentials are absent, the scraper falls back to direct `httpx` for local development.
 
@@ -232,12 +238,13 @@ market-intelligence-agent/
     pipeline.py         Pipeline orchestrator (run_pipeline: scrape → analyze → verify → report)
     agents/
       scraper.py        Bright Data Web Unlocker + httpx + BeautifulSoup4 scraper (robots.txt, page classification, content quality scoring)
-      analyzer.py       instructor + litellm extraction (5 types: pricing, features, team, news, claims)
+      analyzer.py       Hybrid: heuristic page classification + single LLM extraction (pricing, features, team, news, claims)
       verifier.py       Multi-pass claim verification (exact URL match, 5-tier confidence scoring)
       reporter.py       Report generation via instructor (fallback on LLM failure)
-    llm.py              Singleton instructor client wrapping litellm (extract_structured with timeout/retries)
+    llm.py              Routes mimo (raw httpx) or litellm+instructor based on provider, sequential execution with RPM throttle
+    mimo.py             Raw httpx provider for OpenAI-compatible endpoints (no SDK overhead)
     emitter.py          EventEmitter ABC (abstract interface for event publishing)
-    tests/              64 engine tests
+    tests/              71 engine tests
   frontend/
     src/
       app/
@@ -300,7 +307,7 @@ cd engine && python -m pytest tests/test_verifier.py -v
 cd integration && python -m pytest test_adversarial.py -v
 ```
 
-Total: 433 tests across all suites.
+Total: 440 tests across all suites.
 
 ---
 

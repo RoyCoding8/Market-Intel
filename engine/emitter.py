@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 
 from contracts.events import AgentEvent
 
-
 class EventEmitter(ABC):
     """Abstract interface for emitting pipeline events.
 

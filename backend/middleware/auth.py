@@ -19,10 +19,8 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-
 # Paths that never require authentication.
 _PUBLIC_PATHS = frozenset({"/api/health", "/docs", "/openapi.json", "/redoc"})
-
 
 class ApiKeyMiddleware(BaseHTTPMiddleware):
     """Reject requests that lack a valid API key (when one is configured)."""

@@ -20,11 +20,9 @@ from engine.agents.verifier import (
     verify_claims,
 )
 
-
 # ---------------------------------------------------------------------------
 # Unit tests — helpers
 # ---------------------------------------------------------------------------
-
 
 class TestConfidenceLevel:
     def test_high(self):
@@ -41,7 +39,6 @@ class TestConfidenceLevel:
 
     def test_boundary_medium(self):
         assert _confidence_level(0.6) == "low"
-
 
 class TestFindSourceText:
     def test_finds_exact_url(self):
@@ -107,11 +104,9 @@ class TestFindSourceText:
         result = _find_source_text(claim, [])
         assert "not found" in result.lower()
 
-
 # ---------------------------------------------------------------------------
 # Integration tests — verify_claims
 # ---------------------------------------------------------------------------
-
 
 def _make_test_claim(
     claim_id: str = "claim-1",
@@ -129,7 +124,6 @@ def _make_test_claim(
         extracted_at=datetime.now(timezone.utc),
     )
 
-
 def _make_test_scrape_result() -> ScrapeResult:
     return ScrapeResult(
         competitor_url="https://acme.com",
@@ -144,7 +138,6 @@ def _make_test_scrape_result() -> ScrapeResult:
             ),
         ],
     )
-
 
 @pytest.mark.asyncio
 async def test_verify_claims_confirmed():
@@ -173,7 +166,6 @@ async def test_verify_claims_confirmed():
     assert result.results[0].confidence >= 0.8
     assert result.results[0].confidence_level == "high"
 
-
 @pytest.mark.asyncio
 async def test_verify_claims_flagged():
     """Low-confidence verification should flag the claim."""
@@ -196,7 +188,6 @@ async def test_verify_claims_flagged():
     assert result.verified_count == 0
     assert result.flagged_count == 1
     assert result.results[0].verified is False
-
 
 @pytest.mark.asyncio
 async def test_verify_claims_rejects_hallucinated_quote():
@@ -223,7 +214,6 @@ async def test_verify_claims_rejects_hallucinated_quote():
     assert any("quote" in c.lower() for c in result.results[0].concerns)
     assert result.results[0].confidence_level == "very_low"
 
-
 @pytest.mark.asyncio
 async def test_verify_claims_handles_llm_failure():
     """LLM failures should produce flagged claims with zero confidence."""
@@ -240,7 +230,6 @@ async def test_verify_claims_handles_llm_failure():
     assert result.total_claims == 1
     assert result.results[0].verified is False
     assert result.results[0].confidence == 0.0
-
 
 @pytest.mark.asyncio
 async def test_verify_claims_multiple():

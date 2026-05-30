@@ -10,7 +10,6 @@ from contracts.engine import PipelineContext, ReportOutput
 
 logger = logging.getLogger(__name__)
 
-
 async def run_pipeline_stub(
     ctx: PipelineContext,
     emitter: Any,

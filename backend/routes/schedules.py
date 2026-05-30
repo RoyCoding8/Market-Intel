@@ -19,7 +19,6 @@ from contracts.api import (
 
 router = APIRouter(tags=["schedules"])
 
-
 def _schedule_response(row: dict, live_schedule: dict | None = None) -> ScheduledJobResponse:
     return ScheduledJobResponse(
         schedule_id=row["id"],
@@ -33,7 +32,6 @@ def _schedule_response(row: dict, live_schedule: dict | None = None) -> Schedule
         created_at=row["created_at"],
     )
 
-
 @router.get("/api/schedules", response_model=ScheduledJobListResponse)
 async def list_schedules(request: Request) -> ScheduledJobListResponse:
     """List all scheduled jobs."""
@@ -45,7 +43,6 @@ async def list_schedules(request: Request) -> ScheduledJobListResponse:
         for row in await database.list_schedules()
     ]
     return ScheduledJobListResponse(schedules=schedules, total=len(schedules))
-
 
 @router.post("/api/schedules", response_model=ScheduledJobResponse, status_code=201)
 async def create_schedule(body: CreateJobRequest, request: Request) -> ScheduledJobResponse:
@@ -82,7 +79,6 @@ async def create_schedule(body: CreateJobRequest, request: Request) -> Scheduled
         enabled=True,
         created_at=datetime.now(timezone.utc),
     )
-
 
 @router.patch("/api/schedules/{schedule_id}", response_model=ScheduledJobResponse)
 async def update_schedule(
@@ -132,7 +128,6 @@ async def update_schedule(
     live_by_job_id = {item["job_id"]: item for item in scheduler.list_scheduled_jobs()}
     return _schedule_response(row, live_by_job_id.get(job_id))
 
-
 @router.delete("/api/schedules/{schedule_id}")
 async def delete_schedule(schedule_id: str, request: Request) -> dict[str, str]:
     """Delete a scheduled job."""
@@ -144,7 +139,6 @@ async def delete_schedule(schedule_id: str, request: Request) -> dict[str, str]:
     scheduler.remove_scheduled_job(row["job_id"])
     await database.delete_schedule(schedule_id)
     return {"status": "deleted", "schedule_id": schedule_id}
-
 
 async def _scheduled_callback(job_id: str, request: Request | None = None, app: Any = None) -> None:
     """Callback invoked by APScheduler for recurring jobs."""
@@ -182,7 +176,6 @@ async def _scheduled_callback(job_id: str, request: Request | None = None, app: 
     )
     task_request = request or _AppRequest(application)
     _start_background_task(task_request, _run_job_background(new_id, ctx, task_request))
-
 
 class _AppRequest:
     def __init__(self, app: Any) -> None:

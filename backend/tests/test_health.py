@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
-
 @pytest.mark.asyncio
 async def test_health_returns_ok(client: AsyncClient):
     resp = await client.get("/api/health")
@@ -13,7 +12,6 @@ async def test_health_returns_ok(client: AsyncClient):
     body = resp.json()
     assert body["status"] == "ok"
     assert body["version"] == "0.3.0"
-
 
 @pytest.mark.asyncio
 async def test_health_reports_scheduler(client: AsyncClient):

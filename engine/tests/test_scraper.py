@@ -11,17 +11,13 @@ from engine.agents.scraper import (
     BRIGHT_DATA_PROXY_PORT,
     BrightDataConfig,
     _classify_url,
-    _clean_html,
-    _extract_links,
-    _extract_title,
     _get_bright_data_config,
+    _parse_page,
     _prioritize_links,
     scrape_competitor,
 )
 
-
 # Unit tests — helpers
-
 
 class TestClassifyUrl:
     def test_pricing_page(self):
@@ -45,56 +41,50 @@ class TestClassifyUrl:
     def test_nested_path(self):
         assert _classify_url("https://example.com/product/pricing") == "pricing"
 
-
-class TestCleanHtml:
+class TestParsePage:
     def test_strips_script_and_style(self):
         html = "<html><head><style>body{color:red}</style></head><body><p>Hello</p><script>alert(1)</script></body></html>"
-        result = _clean_html(html)
-        assert "Hello" in result
-        assert "alert" not in result
-        assert "color:red" not in result
+        result = _parse_page(html)
+        assert "Hello" in result[0]
+        assert "alert" not in result[0]
+        assert "color:red" not in result[0]
 
     def test_strips_empty_lines(self):
         html = "<p>Line 1</p><p></p><p>Line 2</p>"
-        result = _clean_html(html)
-        assert result == "Line 1\nLine 2"
+        result = _parse_page(html)
+        assert result[0] == "Line 1\nLine 2"
 
     def test_handles_empty_html(self):
-        result = _clean_html("")
-        assert result == ""
+        result = _parse_page("")
+        assert result[0] == ""
 
-
-class TestExtractTitle:
     def test_extracts_title(self):
         html = "<html><head><title>My Page</title></head><body></body></html>"
-        assert _extract_title(html) == "My Page"
+        assert _parse_page(html)[1] == "My Page"
 
     def test_no_title(self):
         html = "<html><body><p>Hi</p></body></html>"
-        assert _extract_title(html) is None
+        assert _parse_page(html)[1] is None
 
     def test_title_with_whitespace(self):
         html = "<html><head><title>  Trimmed  </title></head></html>"
-        assert _extract_title(html) == "Trimmed"
+        assert _parse_page(html)[1] == "Trimmed"
 
-
-class TestExtractLinks:
     def test_extracts_same_domain_links(self):
         html = '<a href="/pricing">Pricing</a><a href="https://other.com/x">External</a>'
-        links = _extract_links(html, "https://example.com")
+        links = _parse_page(html, "https://example.com")[3]
         assert any("/pricing" in link for link in links)
         assert not any("other.com" in link for link in links)
 
     def test_skips_mailto_and_hash(self):
         html = '<a href="mailto:a@b.com">Email</a><a href="#top">Top</a>'
-        links = _extract_links(html, "https://example.com")
+        links = _parse_page(html, "https://example.com")[3]
         assert links == []
 
     def test_deduplicates(self):
         html = '<a href="/page">A</a><a href="/page">B</a>'
-        links = _extract_links(html, "https://example.com")
+        links = _parse_page(html, "https://example.com")[3]
         assert len(links) == 1
-
 
 class TestPrioritizeLinks:
     def test_focus_areas_first(self):
@@ -110,7 +100,6 @@ class TestPrioritizeLinks:
         links = [f"https://example.com/page{i}" for i in range(20)]
         result = _prioritize_links(links, [], 5)
         assert len(result) == 5
-
 
 class TestBrightDataConfig:
     def test_disabled_when_credentials_missing(self):
@@ -142,9 +131,7 @@ class TestBrightDataConfig:
         assert config is not None
         assert config.username == "brd-customer-customer-zone-unlocker-country-us"
 
-
 # Integration tests — scrape_competitor (with mocked HTTP)
-
 
 MOCK_HOMEPAGE_HTML = """
 <html>
@@ -168,7 +155,6 @@ MOCK_PRICING_HTML = """
 </body>
 </html>
 """
-
 
 @pytest.fixture
 def mock_httpx(monkeypatch):
@@ -214,7 +200,6 @@ def mock_httpx(monkeypatch):
 
     monkeypatch.setattr(httpx.AsyncClient, "stream", mock_stream)
 
-
 @pytest.mark.asyncio
 async def test_scrape_competitor_basic(mock_httpx):
     request = ScrapeRequest(url="https://example.com", focus_areas=["pricing"], max_pages=5)
@@ -225,7 +210,6 @@ async def test_scrape_competitor_basic(mock_httpx):
     assert result.pages[0].title == "Acme Corp"
     assert "Welcome to Acme Corp" in result.pages[0].html_text
 
-
 @pytest.mark.asyncio
 async def test_scrape_competitor_finds_pricing(mock_httpx):
     request = ScrapeRequest(url="https://example.com", focus_areas=["pricing"], max_pages=5)
@@ -234,7 +218,6 @@ async def test_scrape_competitor_finds_pricing(mock_httpx):
     pricing_pages = [p for p in result.pages if p.page_type == "pricing"]
     assert len(pricing_pages) >= 1
     assert "$9" in pricing_pages[0].html_text
-
 
 @pytest.mark.asyncio
 async def test_scrape_competitor_marks_bright_data_provider(mock_httpx, monkeypatch):
@@ -250,7 +233,6 @@ async def test_scrape_competitor_marks_bright_data_provider(mock_httpx, monkeypa
     assert result.pages[0].metadata["bright_data_enabled"] == "true"
     assert result.pages[0].metadata["bright_data_zone"] == "unlocker"
 
-
 @pytest.mark.asyncio
 async def test_scrape_competitor_classifies_pages(mock_httpx):
     request = ScrapeRequest(url="https://example.com", focus_areas=["pricing", "about"], max_pages=5)
@@ -258,7 +240,6 @@ async def test_scrape_competitor_classifies_pages(mock_httpx):
 
     types = {p.page_type for p in result.pages}
     assert "homepage" in types
-
 
 @pytest.mark.asyncio
 async def test_scrape_competitor_handles_http_error(monkeypatch):

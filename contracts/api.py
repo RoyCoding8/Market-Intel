@@ -12,8 +12,6 @@ from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-
-
 class JobStatus(str, Enum):
     PENDING = "pending"
     SCRAPING = "scraping"
@@ -42,8 +40,6 @@ class ExportFormat(str, Enum):
     CSV = "csv"
     MARKDOWN = "markdown"
     PDF = "pdf"
-
-
 
 class CompetitorInput(BaseModel):
     url: str = Field(..., description="Competitor website URL", max_length=2048)
@@ -142,7 +138,6 @@ class CompetitorInput(BaseModel):
         v = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", v)
         return v or None
 
-
 class ScrapedPage(BaseModel):
     url: str
     page_type: str
@@ -203,16 +198,12 @@ class CompetitorData(BaseModel):
     recent_news: list[NewsItem] = Field(default_factory=list)
     last_updated: datetime
 
-
-
 class Citation(BaseModel):
     url: str
     title: Optional[str] = None
     quote: str = Field(..., description="Exact quote from source supporting this claim")
     accessed_at: datetime
     confidence: ConfidenceLevel
-
-
 
 class Finding(BaseModel):
     id: str
@@ -237,8 +228,6 @@ class ComparisonTable(BaseModel):
     rows: list[ComparisonRow]
     competitor_ids: list[str]
 
-
-
 class IntelligenceReport(BaseModel):
     id: str
     title: str
@@ -251,8 +240,6 @@ class IntelligenceReport(BaseModel):
     recommendations: list[str] = Field(default_factory=list)
     total_sources: int = 0
     verification_passes: int = 0
-
-
 
 class ScheduleConfig(BaseModel):
     frequency: ScheduleFrequency
@@ -294,8 +281,6 @@ class JobListResponse(BaseModel):
     jobs: list[JobStatusResponse]
     total: int
 
-
-
 class HealthResponse(BaseModel):
     status: str = "ok"
     version: str = "0.3.0"
@@ -310,8 +295,6 @@ class CancelJobResponse(BaseModel):
     status: JobStatus
     message: str
 
-
-
 class ExportRequest(BaseModel):
     format: ExportFormat
     include_citations: bool = True
@@ -322,8 +305,6 @@ class ExportResponse(BaseModel):
     format: ExportFormat
     content: Optional[str] = None
     download_url: Optional[str] = None
-
-
 
 class ScheduledJobResponse(BaseModel):
     schedule_id: str
@@ -344,8 +325,6 @@ class UpdateScheduleRequest(BaseModel):
     enabled: Optional[bool] = None
     frequency: Optional[ScheduleFrequency] = None
     cron_expression: Optional[str] = None
-
-
 
 class DashboardStats(BaseModel):
     total_jobs: int = 0
@@ -369,8 +348,6 @@ class TrendDataPoint(BaseModel):
 class TrendResponse(BaseModel):
     metric: str
     data_points: list[TrendDataPoint]
-
-
 
 class ErrorResponse(BaseModel):
     error: str

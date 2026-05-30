@@ -18,7 +18,6 @@ from .database import Database
 
 logger = logging.getLogger(__name__)
 
-
 class JobRecord:
     """Internal representation of a job — mutable fields that the
     pipeline updates as it runs."""
@@ -54,7 +53,6 @@ class JobRecord:
             completed_at=self.completed_at,
             error=self.error,
         )
-
 
 class JobManager:
     """Job store backed by SQLite with an in-memory cache for active jobs.
@@ -206,8 +204,6 @@ class JobManager:
             if self._db_ready:
                 return await self._db.get_report(job_id)
             return None
-
-    # ── Cancellation ─────────────────────────────────────────────────────
 
     def is_cancelled(self, job_id: str) -> bool:
         """Check if a job has been cancelled (no lock needed for set read)."""

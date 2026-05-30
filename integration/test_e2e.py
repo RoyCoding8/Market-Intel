@@ -23,14 +23,11 @@ if _PROJECT_ROOT not in sys.path:
 
 from backend.main import create_app  # noqa: E402
 
-
 # ── Fixtures ────────────────────────────────────────────────────────────
-
 
 @pytest.fixture
 def anyio_backend():
     return "asyncio"
-
 
 @pytest_asyncio.fixture
 async def app(tmp_path, monkeypatch):
@@ -40,14 +37,12 @@ async def app(tmp_path, monkeypatch):
     async with application.router.lifespan_context(application):
         yield application
 
-
 @pytest_asyncio.fixture
 async def client(app) -> AsyncClient:
     """Async HTTP client bound to the test app."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
-
 
 # Helper to create a job and return its ID
 async def create_test_job(client: AsyncClient, url: str = "https://example.com") -> str:
@@ -59,9 +54,7 @@ async def create_test_job(client: AsyncClient, url: str = "https://example.com")
     assert resp.status_code == 201
     return resp.json()["job_id"]
 
-
 # ── 1. Health Endpoint ──────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_health_endpoint(client: AsyncClient):
@@ -76,9 +69,7 @@ async def test_health_endpoint(client: AsyncClient):
     assert "active_jobs" in body
     assert "total_jobs_completed" in body
 
-
 # ── 2. Full Job Flow ────────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_full_job_flow_create_status_report(client: AsyncClient):
@@ -120,9 +111,7 @@ async def test_full_job_flow_create_status_report(client: AsyncClient):
         assert "findings" in report
         assert "recommendations" in report
 
-
 # ── 3. List Jobs ─────────────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_list_jobs(client: AsyncClient):
@@ -146,9 +135,7 @@ async def test_list_jobs(client: AsyncClient):
     for jid in job_ids:
         assert jid in returned_ids
 
-
 # ── 4. Export Endpoint ──────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_export_json_format(client: AsyncClient):
@@ -172,7 +159,6 @@ async def test_export_json_format(client: AsyncClient):
         # Job not completed yet
         assert resp.status_code in (400, 404)
 
-
 @pytest.mark.asyncio
 async def test_export_csv_format(client: AsyncClient):
     """POST /api/jobs/{id}/export returns valid CSV export."""
@@ -191,7 +177,6 @@ async def test_export_csv_format(client: AsyncClient):
         assert "content" in body
     else:
         assert resp.status_code in (400, 404)
-
 
 @pytest.mark.asyncio
 async def test_export_markdown_format(client: AsyncClient):
@@ -212,7 +197,6 @@ async def test_export_markdown_format(client: AsyncClient):
     else:
         assert resp.status_code in (400, 404)
 
-
 @pytest.mark.asyncio
 async def test_export_nonexistent_job(client: AsyncClient):
     """POST /api/jobs/{id}/export for nonexistent job returns 404."""
@@ -222,9 +206,7 @@ async def test_export_nonexistent_job(client: AsyncClient):
     )
     assert resp.status_code == 404
 
-
 # ── 5. Stats Endpoint ───────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_stats_endpoint(client: AsyncClient):
@@ -245,7 +227,6 @@ async def test_stats_endpoint(client: AsyncClient):
     assert "findings_by_category" in body
     assert "top_competitors" in body
 
-
 @pytest.mark.asyncio
 async def test_stats_reflects_created_jobs(client: AsyncClient):
     """Stats should reflect the jobs we've created."""
@@ -259,9 +240,7 @@ async def test_stats_reflects_created_jobs(client: AsyncClient):
     body = resp.json()
     assert body["total_jobs"] >= 2
 
-
 # ── 6. Trends Endpoint ──────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_trends_endpoint(client: AsyncClient):
@@ -273,7 +252,6 @@ async def test_trends_endpoint(client: AsyncClient):
     assert "data_points" in body
     assert isinstance(body["data_points"], list)
 
-
 @pytest.mark.asyncio
 async def test_trends_with_custom_metric(client: AsyncClient):
     """GET /api/trends with custom metric parameter."""
@@ -282,16 +260,13 @@ async def test_trends_with_custom_metric(client: AsyncClient):
     body = resp.json()
     assert body["metric"] == "jobs_created"
 
-
 @pytest.mark.asyncio
 async def test_trends_with_invalid_days(client: AsyncClient):
     """GET /api/trends with invalid days parameter."""
     resp = await client.get("/api/trends?days=0")
     assert resp.status_code == 422  # validation error (ge=1)
 
-
 # ── 7. Schedule CRUD ────────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_schedule_list(client: AsyncClient):
@@ -307,7 +282,6 @@ async def test_schedule_list(client: AsyncClient):
         assert "schedules" in body
     except Exception:
         pytest.skip("APScheduler compatibility issue with next_run_time attribute")
-
 
 @pytest.mark.asyncio
 async def test_schedule_create_daily(client: AsyncClient):
@@ -325,7 +299,6 @@ async def test_schedule_create_daily(client: AsyncClient):
     assert body["frequency"] == "daily"
     assert body["enabled"] is True
 
-
 @pytest.mark.asyncio
 async def test_schedule_create_hourly(client: AsyncClient):
     """POST /api/schedules creates an hourly schedule."""
@@ -340,7 +313,6 @@ async def test_schedule_create_hourly(client: AsyncClient):
     body = resp.json()
     assert body["frequency"] == "hourly"
 
-
 @pytest.mark.asyncio
 async def test_schedule_create_without_schedule_config(client: AsyncClient):
     """POST /api/schedules without schedule config returns 400."""
@@ -349,7 +321,6 @@ async def test_schedule_create_without_schedule_config(client: AsyncClient):
         json={"competitors": [{"url": "https://example.com"}]},
     )
     assert resp.status_code == 400
-
 
 @pytest.mark.asyncio
 async def test_schedule_update(client: AsyncClient):
@@ -374,7 +345,6 @@ async def test_schedule_update(client: AsyncClient):
     body = update_resp.json()
     assert body["enabled"] is False
 
-
 @pytest.mark.asyncio
 async def test_schedule_delete(client: AsyncClient):
     """DELETE /api/schedules/{id} deletes a schedule."""
@@ -392,7 +362,6 @@ async def test_schedule_delete(client: AsyncClient):
     # Delete it
     delete_resp = await client.delete(f"/api/schedules/{schedule_id}")
     assert delete_resp.status_code == 200
-
 
 @pytest.mark.asyncio
 async def test_schedule_crud_flow(client: AsyncClient):
@@ -425,9 +394,7 @@ async def test_schedule_crud_flow(client: AsyncClient):
     delete_resp = await client.delete(f"/api/schedules/{schedule_id}")
     assert delete_resp.status_code == 200
 
-
 # ── 8. Job Cancellation ─────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_cancel_pending_job(client: AsyncClient):
@@ -441,13 +408,11 @@ async def test_cancel_pending_job(client: AsyncClient):
     assert body["status"] == "cancelled"
     assert "message" in body
 
-
 @pytest.mark.asyncio
 async def test_cancel_nonexistent_job(client: AsyncClient):
     """DELETE /api/jobs/{id} for nonexistent job returns 404."""
     resp = await client.delete("/api/jobs/nonexistent")
     assert resp.status_code == 404
-
 
 @pytest.mark.asyncio
 async def test_cancel_already_cancelled_job(client: AsyncClient):
@@ -465,9 +430,7 @@ async def test_cancel_already_cancelled_job(client: AsyncClient):
     resp2 = await client.delete(f"/api/jobs/{job_id}")
     assert resp2.status_code == 200
 
-
 # ── 9. SSE Stream ────────────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_sse_stream_for_running_job(client: AsyncClient):
@@ -483,16 +446,13 @@ async def test_sse_stream_for_running_job(client: AsyncClient):
     # SSE endpoint may return 200 with stream content
     assert resp.status_code == 200
 
-
 @pytest.mark.asyncio
 async def test_sse_stream_nonexistent_job(client: AsyncClient):
     """GET /api/jobs/{id}/stream for nonexistent job returns 404."""
     resp = await client.get("/api/jobs/nonexistent/stream")
     assert resp.status_code == 404
 
-
 # ── 10. Edge Cases ───────────────────────────────────────────────────────
-
 
 @pytest.mark.asyncio
 async def test_job_with_query(client: AsyncClient):
@@ -510,7 +470,6 @@ async def test_job_with_query(client: AsyncClient):
     # Verify the job was created
     status_resp = await client.get(f"/api/jobs/{job_id}")
     assert status_resp.status_code == 200
-
 
 @pytest.mark.asyncio
 async def test_job_with_multiple_competitors(client: AsyncClient):
@@ -534,7 +493,6 @@ async def test_job_with_multiple_competitors(client: AsyncClient):
     # which runs as a background task (fire-and-forget)
     assert isinstance(status_resp.json()["competitors_found"], int)
 
-
 @pytest.mark.asyncio
 async def test_job_with_custom_focus_areas(client: AsyncClient):
     """POST /api/jobs with custom focus areas."""
@@ -551,7 +509,6 @@ async def test_job_with_custom_focus_areas(client: AsyncClient):
     )
     assert resp.status_code == 201
 
-
 @pytest.mark.asyncio
 async def test_multiple_concurrent_job_creations(client: AsyncClient):
     """Creating multiple jobs concurrently should not fail."""
@@ -564,7 +521,6 @@ async def test_multiple_concurrent_job_creations(client: AsyncClient):
     responses = await asyncio.gather(*[create_one(i) for i in range(10)])
     for resp in responses:
         assert resp.status_code == 201
-
 
 @pytest.mark.asyncio
 async def test_job_status_reflects_competitors_found(client: AsyncClient):

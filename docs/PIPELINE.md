@@ -27,7 +27,7 @@ For each competitor URL:
    - Metadata (description, og:image, canonical URL)
    - Internal links (same-domain only)
 5. **Link prioritization** — Links scored by relevance to focus areas (pricing, features, team, news). Priority pages are fetched first.
-6. **Content classification** — Each page classified by URL patterns and content keyword analysis (e.g., `/pricing` → "pricing" page type).
+6. **Content classification** — Each page classified by URL patterns and content keyword analysis for link prioritization and quality scoring.
 7. **Quality scoring** — Pages scored 0.0–1.0 based on word count, keyword density, and boilerplate detection.
 8. **Deduplication** — Content hashed (SHA-256 of normalized text). Duplicate pages skipped.
 9. **Rate limiting** — Configurable delay between requests (`REQUEST_DELAY_SECONDS`).
@@ -38,29 +38,27 @@ For each competitor URL:
 
 ### Stage 2: Analyze (`engine/agents/analyzer.py`)
 
-For each scraped page (skipping anti-bot-detected and low-quality pages):
+Hybrid architecture: heuristic classification + single LLM extraction.
 
-1. **Concurrent extraction** — Five LLM calls run in parallel per page:
-   - Pricing extraction (`_PricingExtraction`)
-   - Feature extraction (`_FeatureExtraction`)
-   - Team extraction (`_TeamExtraction`)
-   - News extraction (`_NewsExtraction`)
-   - Claim extraction (`_ClaimExtraction`)
+**Pass 1 — Classify (free, no LLM):**
+Python heuristics classify each page using URL patterns (e.g. `/pricing` → pricing) and content keyword matching. Pages classified as pricing, features, team, news, blog, docs, etc. Low-quality pages (below `MIN_PAGE_QUALITY`, default 0.5) and anti-bot pages are skipped entirely.
 
-2. **Page-type filtering** — Each extractor only runs on relevant page types:
-   - Pricing: pricing, homepage, features pages
-   - Features: features, homepage, unknown, pricing pages
-   - Team: about, homepage, jobs pages
-   - News: blog, homepage, unknown pages
-   - Claims: all pages
+**Pass 2 — Extract (1 LLM call per page):**
+A single unified `_PageAnalysis` model extracts ALL data types in one call:
 
-3. **Claim generation** — Each claim includes:
-   - Factual statement
-   - Category (pricing, feature, market_position, etc.)
-   - Exact source quote from the page
-   - Source URL and competitor URL
+| Data type | Fields |
+|-----------|--------|
+| Pricing | Plans, prices, billing periods, free tier, enterprise pricing |
+| Features | Name, description, category, differentiators, limitations |
+| Team | Size, key members, recent hires, funding/growth indicators |
+| News | Announcements, product launches, partnerships |
+| Claims | Verifiable factual statements with exact source quotes |
 
-4. **Aggregation** — Results merged across all pages. First pricing/team data wins (no overwriting).
+Sequential execution with RPM throttle (`LLM_RPM`, default 10). Each call returns a validated Pydantic model via instructor or raw httpx (for OpenAI-compatible endpoints).
+
+**Claim generation** — Each claim includes factual statement, category, exact source quote, source URL.
+
+**Aggregation** — Results merged across all pages. First pricing/team data wins (no overwriting).
 
 ### Stage 3: Verify (`engine/agents/verifier.py`)
 

@@ -13,7 +13,6 @@ import { toast } from "@/components/ui/toast";
 import { DEMO_EVENTS, DEMO_JOB_STATUS, DEMO_JOBS, DEMO_REPORT } from "@/lib/demoData";
 
 interface JobStore {
-  // ── State ──────────────────────────────────────────────────────────────
   activeJobId: string | null;
   events: AgentEvent[];
   jobStatus: JobStatusResponse | null;
@@ -23,7 +22,6 @@ interface JobStore {
   error: string | null;
   isDemoMode: boolean;
 
-  // ── Actions ────────────────────────────────────────────────────────────
   createJob: (payload: CreateJobRequest) => Promise<string>;
   setActiveJob: (jobId: string) => void;
   loadDemoData: () => void;
@@ -42,7 +40,6 @@ interface JobStore {
 }
 
 export const useJobStore = create<JobStore>((set, get) => ({
-  // ── Initial State ──────────────────────────────────────────────────────
   activeJobId: null,
   events: [],
   jobStatus: null,
@@ -52,8 +49,6 @@ export const useJobStore = create<JobStore>((set, get) => ({
   error: null,
   isDemoMode: true,
   _sseConnection: null,
-
-  // ── Actions ────────────────────────────────────────────────────────────
 
   loadDemoData: () => {
     set({
@@ -281,8 +276,6 @@ export const useJobStore = create<JobStore>((set, get) => ({
       error: null,
     });
   },
-
-  // ── SSE Connection ─────────────────────────────────────────────────────
 
   connectSSE: (jobId: string) => {
     get().disconnectSSE();

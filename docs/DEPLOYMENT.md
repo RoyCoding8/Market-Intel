@@ -89,6 +89,11 @@ graph LR
 | `LLM_TIMEOUT_SECONDS` | `60` | Per-LLM-call timeout |
 | `MAX_CONCURRENT_JOBS` | `5` | Max parallel analysis jobs |
 | `MAX_COMPETITORS_PER_JOB` | `10` | Max competitors per job |
+| `PIPELINE_TIMEOUT_SECONDS` | `600` | Per-job pipeline timeout (0 = no timeout) |
+| `LLM_RPM` | `10` | Rate limit for sequential LLM calls (requests per minute) |
+| `MIN_PAGE_QUALITY` | `0.5` | Minimum page quality score to send to LLM (0.0-1.0) |
+| `LITELLM_DEBUG` | `false` | Enable verbose litellm logging |
+| `IGNORE_ROBOTS_TXT` | `true` | Skip robots.txt checks |
 
 ### Optional — Bright Data
 | Variable | Description |

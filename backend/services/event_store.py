@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 # Max events to buffer per job for replay on reconnect
 MAX_EVENTS_PER_JOB = 500
 
-
 class EventStore(EventEmitter):
     """In-memory pub/sub event store.
 

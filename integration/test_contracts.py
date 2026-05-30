@@ -82,9 +82,7 @@ from contracts.events import (
     VerificationEvent,
 )
 
-
 # ── 1. API Models — Instantiation with Valid Data ────────────────────────
-
 
 class TestAPIModels:
     """Test that all API contract models can be instantiated with valid data."""
@@ -360,9 +358,7 @@ class TestAPIModels:
         assert req.frequency == ScheduleFrequency.WEEKLY
         assert req.enabled is None
 
-
 # ── 2. Required Field Validation ─────────────────────────────────────────
-
 
 class TestRequiredFields:
     """Test that missing required fields raise validation errors."""
@@ -430,9 +426,7 @@ class TestRequiredFields:
                 scraped_at=datetime.now(timezone.utc),
             )  # type: ignore
 
-
 # ── 3. Enum Value Consistency ────────────────────────────────────────────
-
 
 class TestEnumConsistency:
     """Verify enum values match between Python and TypeScript definitions."""
@@ -481,9 +475,7 @@ class TestEnumConsistency:
         actual = {s.value for s in PipelineState}
         assert actual == expected
 
-
 # ── 4. Forward Reference Resolution ──────────────────────────────────────
-
 
 class TestForwardReferences:
     """Test that forward references resolve correctly."""
@@ -607,9 +599,7 @@ class TestForwardReferences:
         )
         assert vo.total_claims == 1
 
-
 # ── 5. Field Type Consistency ────────────────────────────────────────────
-
 
 class TestFieldTypes:
     """Verify field types are consistent between api.py and engine.py."""
@@ -685,9 +675,7 @@ class TestFieldTypes:
         )
         assert isinstance(resp.progress, float)
 
-
 # ── 6. Validation Constraints ────────────────────────────────────────────
-
 
 class TestValidationConstraints:
     """Test field constraints (ge, le, max_length, etc.)."""
@@ -770,9 +758,7 @@ class TestValidationConstraints:
                 source_url="https://example.com",
             )
 
-
 # ── 7. Enum Str Compatibility ────────────────────────────────────────────
-
 
 class TestEnumStrCompatibility:
     """Test that enums work as strings (str, Enum mixin)."""

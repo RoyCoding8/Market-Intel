@@ -3,7 +3,6 @@
  * Keep in sync with the Python contracts.
  */
 
-
 export type JobStatus =
   | "pending"
   | "scraping"
@@ -19,7 +18,6 @@ export type ConfidenceLevel = "high" | "medium" | "low" | "very_low";
 export type ScheduleFrequency = "once" | "hourly" | "daily" | "weekly" | "custom";
 
 export type ExportFormat = "json" | "csv" | "markdown" | "pdf";
-
 
 export interface CompetitorInput {
   url: string;
@@ -95,7 +93,6 @@ export interface CompetitorData {
   last_updated: string;
 }
 
-
 export interface Citation {
   url: string;
   title?: string;
@@ -103,7 +100,6 @@ export interface Citation {
   accessed_at: string;
   confidence: ConfidenceLevel;
 }
-
 
 export interface Finding {
   id: string;
@@ -131,7 +127,6 @@ export interface ComparisonTable {
   competitor_ids: string[];
 }
 
-
 export interface IntelligenceReport {
   id: string;
   title: string;
@@ -145,7 +140,6 @@ export interface IntelligenceReport {
   total_sources: number;
   verification_passes: number;
 }
-
 
 export interface ScheduleConfig {
   frequency: ScheduleFrequency;
@@ -197,13 +191,11 @@ export interface HealthResponse {
   total_jobs_completed: number;
 }
 
-
 export interface CancelJobResponse {
   job_id: string;
   status: JobStatus;
   message: string;
 }
-
 
 export interface ExportRequest {
   format: ExportFormat;
@@ -217,7 +209,6 @@ export interface ExportResponse {
   content?: string;
   download_url?: string;
 }
-
 
 export interface ScheduledJobResponse {
   schedule_id: string;
@@ -241,7 +232,6 @@ export interface UpdateScheduleRequest {
   frequency?: ScheduleFrequency;
   cron_expression?: string;
 }
-
 
 export interface DashboardStats {
   total_jobs: number;
@@ -269,13 +259,11 @@ export interface TrendResponse {
   data_points: TrendDataPoint[];
 }
 
-
 export interface ErrorResponse {
   error: string;
   detail?: string;
   status_code: number;
 }
-
 
 export type EventType =
   | "job.started"

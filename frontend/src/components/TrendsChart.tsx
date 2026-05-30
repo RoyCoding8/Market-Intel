@@ -85,8 +85,8 @@ export function TrendsChart() {
         <CardTitle>Findings Over Time (30 Days)</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[260px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="h-[260px] w-full min-w-0">
+          <ResponsiveContainer width="100%" height={260} minWidth={300}>
             <LineChart
               data={data}
               margin={{ top: 5, right: 10, left: -10, bottom: 5 }}

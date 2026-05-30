@@ -108,7 +108,6 @@ async function request<T>(
   return JSON.parse(text) as T;
 }
 
-
 export async function createJob(
   payload: CreateJobRequest
 ): Promise<CreateJobResponse> {
@@ -150,11 +149,9 @@ export async function exportReport(
   });
 }
 
-
 export async function getHealth(): Promise<HealthResponse> {
   return request<HealthResponse>("/api/health");
 }
-
 
 export async function getStats(): Promise<DashboardStats> {
   return request<DashboardStats>("/api/stats");
@@ -168,7 +165,6 @@ export async function getTrends(
     `/api/trends?metric=${encodeURIComponent(metric)}&days=${days}`
   );
 }
-
 
 export async function listSchedules(): Promise<ScheduledJobListResponse> {
   return request<ScheduledJobListResponse>("/api/schedules");

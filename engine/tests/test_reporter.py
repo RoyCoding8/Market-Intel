@@ -25,9 +25,7 @@ from engine.agents.reporter import (
     generate_report,
 )
 
-
 # Unit tests — helpers
-
 
 class TestBuildAnalysisSummary:
     def test_includes_competitor_name(self):
@@ -68,7 +66,6 @@ class TestBuildAnalysisSummary:
         result = _build_analysis_summary([ar])
         assert "free tier" in result.lower()
 
-
 class TestBuildVerificationSummary:
     def test_includes_counts(self):
         vo = VerificationOutput(
@@ -104,9 +101,7 @@ class TestBuildVerificationSummary:
         assert "Flagged claims" in result
         assert "Unsupported" in result
 
-
 # Integration tests — generate_report
-
 
 @pytest.mark.asyncio
 async def test_generate_report_basic():
@@ -194,7 +189,6 @@ async def test_generate_report_basic():
     assert len(result.recommendations) >= 1
     assert result.total_sources == 1
 
-
 @pytest.mark.asyncio
 async def test_generate_report_handles_llm_failure():
     """Report generation should return a minimal report on LLM failure."""
@@ -217,7 +211,6 @@ async def test_generate_report_handles_llm_failure():
 
     assert "failed" in result.executive_summary.lower()
     assert result.findings == []
-
 
 @pytest.mark.asyncio
 async def test_generate_report_multiple_competitors():

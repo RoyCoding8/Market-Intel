@@ -8,7 +8,6 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-
 class PipelineState(str, Enum):
     INIT = "pending"                # matches JobStatus.PENDING
     SCRAPING = "scraping"
@@ -34,6 +33,30 @@ class ScrapeRequest(BaseModel):
     focus_areas: list[str]
     max_pages: int = Field(default=20, ge=1, le=100)
 
+class QualityVector(BaseModel):
+    """Multi-dimensional page quality assessment.
+
+    Each dimension captures a distinct signal that downstream stages
+    can weight independently (e.g., pricing extractor cares about
+    density + structure, news extractor cares about freshness).
+    """
+    density: float = Field(default=0.0, ge=0.0, le=1.0, description="Keyword relevance to page type")
+    volume: float = Field(default=0.0, ge=0.0, le=1.0, description="Content length adequacy")
+    structure: float = Field(default=0.0, ge=0.0, le=1.0, description="Tables, lists, headings present")
+    freshness: float = Field(default=0.0, ge=0.0, le=1.0, description="Date indicators present")
+    noise: float = Field(default=0.0, ge=0.0, le=1.0, description="Boilerplate ratio (lower = cleaner)")
+
+    @property
+    def composite(self) -> float:
+        """Weighted composite score (backward compatible with content_quality)."""
+        return max(0.0, min(1.0,
+            0.3 * self.density +
+            0.25 * self.volume +
+            0.2 * self.structure +
+            0.15 * self.freshness +
+            0.1 * (1.0 - self.noise)
+        ))
+
 class ScrapedContent(BaseModel):
     url: str
     title: Optional[str] = None
@@ -43,6 +66,7 @@ class ScrapedContent(BaseModel):
     scraped_at: datetime
     metadata: dict[str, Optional[str]] = Field(default_factory=dict)
     content_quality: float = Field(default=0.0, ge=0.0, le=1.0)
+    quality_vector: Optional[QualityVector] = Field(default=None, description="Multi-dimensional quality assessment")
     content_hash: str = ""
     robots_respected: bool = True
     anti_bot_detected: Optional[str] = None
@@ -64,6 +88,13 @@ class Claim(BaseModel):
     source_quote: str = Field(..., description="Exact quote from source")
     competitor_url: str
     extracted_at: datetime
+    relevance: float = Field(default=0.5, ge=0.0, le=1.0, description="How relevant to the user's query (0-1)")
+    reliability: float = Field(default=0.5, ge=0.0, le=1.0, description="How likely correct based on pipeline confidence (0-1)")
+
+    @property
+    def expected_value(self) -> float:
+        """Decision-theoretic value: relevance × reliability."""
+        return self.relevance * self.reliability
 
 class AnalysisRequest(BaseModel):
     scrape_result: ScrapeResult
@@ -78,7 +109,6 @@ class AnalysisResult(BaseModel):
     features_data: list[dict] = Field(default_factory=list)
     team_data: Optional[dict] = None
     news_data: list[dict] = Field(default_factory=list)
-    raw_llm_response: Optional[str] = None
 
 class VerificationRequest(BaseModel):
     claims: list[Claim]
@@ -114,3 +144,5 @@ class ReportOutput(BaseModel):
     trend_analysis: Optional[str] = None
     recommendations: list[str] = Field(default_factory=list)
     total_sources: int = 0
+    total_expected_value: float = Field(default=0.0, description="Sum of all claim expected values (relevance × reliability)")
+    average_expected_value: float = Field(default=0.0, description="Average expected value across all claims")

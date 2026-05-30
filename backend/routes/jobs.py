@@ -34,7 +34,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["jobs"])
 DEFAULT_LLM_MODEL = "openai/mimo-v2.5-pro"
 
-
 def _env_int(name: str, default: int, *, min_value: int, max_value: int) -> int:
     try:
         value = int(os.getenv(name, str(default)))
@@ -46,7 +45,6 @@ def _env_int(name: str, default: int, *, min_value: int, max_value: int) -> int:
         return default
     return value
 
-
 def _configured_pipeline_kwargs() -> dict[str, int | str]:
     return {
         "llm_model": os.getenv("LLM_MODEL", DEFAULT_LLM_MODEL),
@@ -54,14 +52,9 @@ def _configured_pipeline_kwargs() -> dict[str, int | str]:
         "verification_passes": _env_int("VERIFICATION_PASSES", 2, min_value=1, max_value=10),
     }
 
-
 def _focus_areas_from_request(body: CreateJobRequest) -> list[str]:
-    focus_areas: list[str] = []
-    for comp in body.competitors:
-        focus_areas.extend(comp.focus_areas)
-    focus_areas = list(dict.fromkeys(focus_areas))
-    return focus_areas or ["pricing", "features", "team", "news"]
-
+    areas = list(dict.fromkeys(a for c in body.competitors for a in c.focus_areas))
+    return areas or ["pricing", "features", "team", "news"]
 
 def _start_background_task(request: Request, coro) -> None:
     task = asyncio.create_task(coro)
@@ -69,7 +62,6 @@ def _start_background_task(request: Request, coro) -> None:
     if tasks is not None:
         tasks.add(task)
         task.add_done_callback(tasks.discard)
-
 
 class _JobProgressEmitter:
     """Forward engine events while keeping backend job state in sync."""
@@ -111,7 +103,6 @@ class _JobProgressEmitter:
             await self._job_mgr.update_progress(event.job_id, current_step="failed")
         elif event.event_type == EventType.JOB_FAILED:
             await self._job_mgr.set_error(event.job_id, event.message)
-
 
 def _report_output_to_intelligence_report(
     job_id: str,
@@ -166,18 +157,12 @@ def _report_output_to_intelligence_report(
         verification_passes=verification_passes,
     )
 
-
 async def _run_job_background(
     job_id: str,
     ctx: PipelineContext,
     request: Request,
 ) -> None:
-    """Background task: run the engine pipeline, update job state, and
-    publish lifecycle events to the event store.
-
-    Respects the concurrent-job semaphore and pipeline timeout configured
-    in app.state.
-    """
+    """Background task: run the engine pipeline and publish lifecycle events."""
 
     job_mgr: Any = request.app.state.job_manager
     event_store: Any = request.app.state.event_store
@@ -231,7 +216,6 @@ async def _run_job_background(
         finally:
             await event_store.close_job(job_id)
 
-
 async def _emit(event_store: Any, job_id: str, event_type: EventType, message: str,
                 data: dict[str, Any] | None = None) -> None:
     from datetime import datetime, timezone
@@ -240,10 +224,6 @@ async def _emit(event_store: Any, job_id: str, event_type: EventType, message: s
         event_type=event_type, job_id=job_id, agent_name="backend",
         timestamp=datetime.now(timezone.utc), message=message, data=data,
     ))
-
-
-# ── Endpoints ─────────────────────────────────────────────────────────────
-
 
 @router.post("/api/jobs", response_model=CreateJobResponse, status_code=201)
 async def create_job(body: CreateJobRequest, request: Request) -> CreateJobResponse:
@@ -296,15 +276,12 @@ async def create_job(body: CreateJobRequest, request: Request) -> CreateJobRespo
         message="Job created. Pipeline started.",
     )
 
-
-
 @router.get("/api/jobs", response_model=JobListResponse)
 async def list_jobs(request: Request) -> JobListResponse:
     """List all tracked jobs."""
     job_mgr = request.app.state.job_manager
     jobs = await job_mgr.list_jobs()
     return JobListResponse(jobs=jobs, total=len(jobs))
-
 
 @router.get("/api/jobs/{job_id}", response_model=JobStatusResponse)
 async def get_job(job_id: str, request: Request) -> JobStatusResponse:
@@ -314,7 +291,6 @@ async def get_job(job_id: str, request: Request) -> JobStatusResponse:
     if record is None:
         raise HTTPException(status_code=404, detail="Job not found")
     return record.to_status_response()
-
 
 @router.get("/api/jobs/{job_id}/stream")
 async def stream_job(job_id: str, request: Request) -> EventSourceResponse:
@@ -358,7 +334,6 @@ async def stream_job(job_id: str, request: Request) -> EventSourceResponse:
 
     return EventSourceResponse(event_generator())
 
-
 @router.get("/api/jobs/{job_id}/report", response_model=ReportResponse)
 async def get_report(job_id: str, request: Request) -> ReportResponse:
     """Retrieve the final report for a completed job."""
@@ -372,7 +347,6 @@ async def get_report(job_id: str, request: Request) -> ReportResponse:
     if report is None:
         raise HTTPException(status_code=404, detail="Report not available")
     return ReportResponse(report=report)
-
 
 @router.delete("/api/jobs/{job_id}", response_model=CancelJobResponse)
 async def cancel_job(job_id: str, request: Request) -> CancelJobResponse:
@@ -388,7 +362,6 @@ async def cancel_job(job_id: str, request: Request) -> CancelJobResponse:
 
     await job_mgr.cancel_job(job_id)
     return CancelJobResponse(job_id=job_id, status=JobStatus.CANCELLED, message="Job cancelled")
-
 
 @router.post("/api/jobs/{job_id}/export", response_model=ExportResponse)
 async def export_report_endpoint(job_id: str, body: ExportRequest, request: Request) -> ExportResponse:

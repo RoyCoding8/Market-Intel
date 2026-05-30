@@ -21,7 +21,6 @@ _FREQUENCY_CRON: dict[ScheduleFrequency, dict[str, str]] = {
 
 RunJobCallback = Callable[..., Coroutine[Any, Any, None]]
 
-
 class SchedulerService:
     """Thin wrapper around APScheduler for recurring market-intel jobs."""
 

@@ -11,12 +11,10 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-
 def _trusted_proxies() -> set[str]:
     """Return set of trusted proxy IPs from TRUSTED_PROXIES env var (comma-separated)."""
     raw = os.getenv("TRUSTED_PROXIES", "")
     return {ip.strip() for ip in raw.split(",") if ip.strip()}
-
 
 class _SlidingWindow:
     """Simple sliding-window counter for a single IP."""
@@ -43,7 +41,6 @@ class _SlidingWindow:
         if not self.timestamps:
             return 0.0
         return max(0.0, window - (time.monotonic() - self.timestamps[0]))
-
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Sliding-window rate limiter.

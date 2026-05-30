@@ -24,7 +24,7 @@ from tenacity import (
     retry_if_exception_type,
 )
 
-from contracts.engine import ScrapeRequest, ScrapeResult, ScrapedContent
+from contracts.engine import QualityVector, ScrapeRequest, ScrapeResult, ScrapedContent
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,6 @@ MAX_REDIRECTS = 5
 BRIGHT_DATA_PROXY_HOST = "brd.superproxy.io"
 BRIGHT_DATA_PROXY_PORT = 33335
 
-
 def _env_float(name: str, default: float) -> float:
     try:
         return float(os.getenv(name, str(default)))
@@ -41,20 +40,16 @@ def _env_float(name: str, default: float) -> float:
         logger.warning("Invalid float for %s; using %.2f", name, default)
         return default
 
-
 def _env_bool(name: str, default: bool) -> bool:
     value = os.getenv(name)
     return _parse_bool(value, default)
-
 
 def _parse_bool(value: str | None, default: bool) -> bool:
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
-
 REQUEST_DELAY_SECONDS = max(0.0, _env_float("REQUEST_DELAY_SECONDS", 1.0))
-
 
 class BrightDataConfig(BaseModel):
     """Runtime configuration for Bright Data Web Unlocker proxy access."""
@@ -82,7 +77,6 @@ class BrightDataConfig(BaseModel):
         username = quote(self.username, safe="")
         password = quote(self.password.get_secret_value(), safe="")
         return f"http://{username}:{password}@{self.host}:{self.port}"
-
 
 class FetchOutcome(BaseModel):
     """HTTP fetch output kept small and explicit for downstream parsing."""
@@ -139,7 +133,6 @@ _CONTENT_KEYWORDS: dict[str, list[str]] = {
     ],
 }
 
-
 def _classify_url(url: str) -> str:
     """Classify a page by its URL path patterns."""
     path = urlparse(url).path.lower()
@@ -147,7 +140,6 @@ def _classify_url(url: str) -> str:
         if any(pattern in path for pattern in patterns):
             return page_type
     return "unknown"
-
 
 def _classify_content(text: str) -> str:
     """Classify page type by content keywords.
@@ -166,7 +158,6 @@ def _classify_content(text: str) -> str:
     best_type = max(scores, key=scores.get)
     return best_type if scores[best_type] >= 2 else "unknown"
 
-
 def _combined_classify(url: str, content: str) -> str:
     """Classify using both URL patterns and content analysis.
 
@@ -175,53 +166,76 @@ def _combined_classify(url: str, content: str) -> str:
     url_type = _classify_url(url)
     return url_type if url_type != "unknown" else _classify_content(content)
 
+def _content_quality_score(text: str, page_type: str) -> tuple[float, QualityVector]:
+    """Rate the usefulness of a page's content.
 
-def _content_quality_score(text: str, page_type: str) -> float:
-    """Rate the usefulness of a page's content on a 0.0-1.0 scale."""
+    Returns (composite_score, quality_vector) where the vector contains
+    independent dimensions that downstream stages can weight differently.
+    """
     if not text or len(text.strip()) < 20:
-        return 0.0
-    score = 0.0
+        return 0.0, QualityVector()
+
     text_lower = text.lower()
     word_count = len(text.split())
+
+    # Volume: content length adequacy
     if word_count < 50:
-        score += 0.1
+        volume = 0.1
     elif word_count < 200:
-        score += 0.3
+        volume = 0.3
     elif word_count < 5000:
-        score += 0.5
+        volume = 0.5
     else:
-        score += 0.3
+        volume = 0.3
+
+    # Structure: tables, lists, headings present
+    structure = 0.0
     if any(marker in text for marker in ["|", "\t"]):
-        score += 0.05
+        structure += 0.5
     if text.count("\n") > 10:
-        score += 0.05
+        structure += 0.5
+
+    # Density: keyword relevance to page type
+    density = 0.0
     if page_type in _CONTENT_KEYWORDS:
         keywords = _CONTENT_KEYWORDS[page_type]
         keyword_hits = sum(1 for kw in keywords if kw in text_lower)
-        keyword_density = keyword_hits / max(len(keywords), 1)
-        score += min(keyword_density * 0.3, 0.3)
+        density = min(keyword_hits / max(len(keywords), 1), 1.0)
+
+    # Freshness: date indicators present
+    freshness = 0.0
+    date_markers = ["2024", "2025", "2026", "published", "updated", "released", "announced", "launch"]
+    date_hits = sum(1 for m in date_markers if m in text_lower)
+    freshness = min(date_hits / 3, 1.0)
+
+    # Noise: boilerplate ratio (lower = cleaner)
     boilerplate_markers = [
         "cookie policy", "privacy policy", "terms of service",
         "subscribe to our newsletter", "all rights reserved",
     ]
     boilerplate_count = sum(1 for m in boilerplate_markers if m in text_lower)
-    if boilerplate_count >= 3:
-        score -= 0.2
-    return max(0.0, min(1.0, score))
+    noise = min(boilerplate_count / 3, 1.0)
 
+    vector = QualityVector(
+        density=round(density, 2),
+        volume=round(volume, 2),
+        structure=round(structure, 2),
+        freshness=round(freshness, 2),
+        noise=round(noise, 2),
+    )
+
+    return vector.composite, vector
 
 def _content_hash(text: str) -> str:
     """Return a hash of the normalised content for deduplication."""
     normalised = " ".join(text.lower().split())
     return hashlib.sha256(normalised.encode()).hexdigest()[:16]
 
-
 def _truncate_content(text: str) -> str:
     """Keep scraped page text within the analyzer's safe input budget."""
     if len(text) <= MAX_PAGE_CONTENT_CHARS:
         return text
     return text[:MAX_PAGE_CONTENT_CHARS] + "\n...[truncated]"
-
 
 def _parse_page(html: str, base_url: str = "") -> tuple[str, Optional[str], dict[str, Optional[str]], list[str]]:
     """Single-pass HTML parse: returns (clean_text, title, metadata, links)."""
@@ -264,43 +278,25 @@ def _parse_page(html: str, base_url: str = "") -> tuple[str, Optional[str], dict
     clean_text = "\n".join(line.strip() for line in text.splitlines() if line.strip())
     return clean_text, title, metadata, links
 
-
-def _clean_html(html: str) -> str:
-    """Strip scripts, styles, and return clean visible text."""
-    return _parse_page(html)[0]
-
-
-def _extract_title(html: str) -> Optional[str]:
-    """Extract the page <title>."""
-    return _parse_page(html)[1]
-
-
-def _extract_links(html: str, base_url: str) -> list[str]:
-    """Extract and normalize all same-domain <a href> links."""
-    return _parse_page(html, base_url)[3]
-
-
 def _mk_page(
     url: str, title: Optional[str], text: str, page_type: str, *,
     links: list[str] | None = None, metadata: dict[str, Optional[str]] | None = None,
-    quality: float = 0.0, c_hash: str | None = None, anti_bot: str | None = None,
+    quality: float = 0.0, quality_vector=None, c_hash: str | None = None, anti_bot: str | None = None,
 ) -> ScrapedContent:
     """Construct a ScrapedContent with consistent defaults."""
     return ScrapedContent(
         url=url, title=title, html_text=text, page_type=page_type,
         links_found=links or [], scraped_at=datetime.now(timezone.utc),
-        metadata=metadata or {}, content_quality=quality,
+        metadata=metadata or {}, content_quality=quality, quality_vector=quality_vector,
         content_hash=c_hash or _content_hash(text), robots_respected=True,
         anti_bot_detected=anti_bot,
     )
-
 
 def _prioritize_links(links: list[str], focus_areas: list[str], max_pages: int) -> list[str]:
     def _priority(url: str) -> int:
         pt = _classify_url(url)
         return 0 if pt in focus_areas else (2 if pt == "unknown" else 1)
     return sorted(links, key=_priority)[:max_pages]
-
 
 def _detect_anti_bot(html: str, status_code: int, *, via_proxy: bool = False) -> Optional[str]:
     """Detect common anti-bot patterns. Returns description or None.
@@ -328,7 +324,6 @@ def _detect_anti_bot(html: str, status_code: int, *, via_proxy: bool = False) ->
     if status_code in (403, 429) and len(html) < 5000:
         return f"blocked_{status_code}"
     return None
-
 
 def _get_bright_data_config(environ: Mapping[str, str] | None = None) -> BrightDataConfig | None:
     """Build Bright Data config from env, returning None for direct dev scraping."""
@@ -377,7 +372,6 @@ def _get_bright_data_config(environ: Mapping[str, str] | None = None) -> BrightD
         verify_ssl=verify_ssl,
     )
 
-
 def _bright_data_metadata(
     config: BrightDataConfig | None,
     headers: Mapping[str, str] | None = None,
@@ -405,7 +399,6 @@ def _bright_data_metadata(
         metadata["bright_data_debug"] = debug_header[:1000]
     return metadata
 
-
 def _client_kwargs(config: BrightDataConfig | None) -> dict:
     kwargs: dict = {"max_redirects": MAX_REDIRECTS}
     if config is not None:
@@ -421,7 +414,6 @@ def _client_kwargs(config: BrightDataConfig | None) -> dict:
             kwargs["verify"] = config.verify_ssl
     return kwargs
 
-
 async def _check_robots_txt(client: httpx.AsyncClient, base_url: str) -> Optional[RobotFileParser]:
     """Fetch and parse robots.txt. Returns None if unavailable."""
     parsed = urlparse(base_url)
@@ -435,7 +427,6 @@ async def _check_robots_txt(client: httpx.AsyncClient, base_url: str) -> Optiona
     except Exception as exc:
         logger.debug("robots.txt lookup failed for %s: %s", robots_url, exc)
     return None
-
 
 @retry(
     stop=stop_after_attempt(3),
@@ -480,30 +471,12 @@ async def _fetch_page(
         headers=dict(getattr(resp, "headers", {}) or {}),
     )
 
-
 async def scrape_competitor(
     request: ScrapeRequest,
     *,
     cancelled_check: Optional[Callable[[], bool]] = None,
 ) -> ScrapeResult:
-    """Scrape a competitor website and return cleaned page content.
-
-    Features (v2):
-    - Content-based page classification (in addition to URL patterns)
-    - Metadata extraction (description, og:image, canonical URL)
-    - Link scoring by relevance
-    - robots.txt respect
-    - Anti-bot detection (Cloudflare, CAPTCHA)
-    - Content quality scoring
-    - Page deduplication by content hash
-
-    Args:
-        request: ScrapeRequest with the target URL, focus areas, and page limit.
-        cancelled_check: Optional callable returning True if pipeline was cancelled.
-
-    Returns:
-        ScrapeResult with all scraped pages and any errors encountered.
-    """
+    """Scrape a competitor website and return cleaned page content."""
     pages: list[ScrapedContent] = []
     errors: list[str] = []
     attempted = 0
@@ -582,14 +555,14 @@ async def scrape_competitor(
                 clean_text, title, metadata, links = _parse_page(homepage_fetch.html, homepage_url)
                 clean_text = _truncate_content(clean_text)
                 metadata.update(_bright_data_metadata(bright_data_config, homepage_fetch.headers))
-                quality = 0.0 if anti_bot else _content_quality_score(clean_text, "homepage")
+                quality, qvector = (0.0, None) if anti_bot else _content_quality_score(clean_text, "homepage")
                 c_hash = _content_hash(clean_text)
                 seen_hashes.add(c_hash)
 
                 pages.append(_mk_page(
                     homepage_url, title, clean_text, "homepage",
                     links=[] if anti_bot else links,
-                    metadata=metadata, quality=quality, c_hash=c_hash,
+                    metadata=metadata, quality=quality, quality_vector=qvector, c_hash=c_hash,
                     anti_bot=anti_bot,
                 ))
 
@@ -631,10 +604,10 @@ async def scrape_competitor(
                             seen_hashes.add(c_hash)
 
                             page_type = _combined_classify(link, clean_text)
-                            quality = _content_quality_score(clean_text, page_type)
+                            quality, qvector = _content_quality_score(clean_text, page_type)
                             pages.append(_mk_page(
                                 link, title, clean_text, page_type,
-                                metadata=metadata, quality=quality, c_hash=c_hash,
+                                metadata=metadata, quality=quality, quality_vector=qvector, c_hash=c_hash,
                             ))
                             logger.info("Scraped %s (%s, quality=%.2f)", link, page_type, quality)
                         except httpx.HTTPStatusError as exc:

@@ -12,7 +12,6 @@ from engine.llm import extract_structured
 
 logger = logging.getLogger(__name__)
 
-
 class _Citation(BaseModel):
     url: str
     quote: str
@@ -46,8 +45,6 @@ class _ReportDraft(BaseModel):
     immediate_actions: list[str] = Field(default_factory=list)
     short_term_actions: list[str] = Field(default_factory=list)
     strategic_considerations: list[str] = Field(default_factory=list)
-
-
 
 _REPORT_PROMPT = """You are a senior intelligence analyst generating a competitor analysis report.
 
@@ -93,8 +90,6 @@ Generate a comprehensive competitive intelligence report. Structure it as:
 Every finding MUST include at least one citation with a URL and an exact source quote.
 Focus on actionable intelligence, not generic observations."""
 
-
-
 def _build_analysis_summary(analysis_results: list[AnalysisResult]) -> str:
     parts: list[str] = []
     for ar in analysis_results:
@@ -107,7 +102,7 @@ def _build_analysis_summary(analysis_results: list[AnalysisResult]) -> str:
         if ar.features_data:
             part += f"Features: {len(ar.features_data)} found\n"
             for f in ar.features_data[:5]:
-                part += f"  - {f.get('name', '?')}: {f.get('description', '')[:100]}\n"
+                part += f"  - {f.get('name', '?')}: {(f.get('description') or '')[:100]}\n"
         if ar.team_data:
             part += f"Team: {ar.team_data.get('team_size', 'unknown')}\n"
         if ar.news_data:
@@ -118,7 +113,6 @@ def _build_analysis_summary(analysis_results: list[AnalysisResult]) -> str:
                 part += f"  - [{c.category}] {c.text[:120]}\n"
         parts.append(part)
     return "\n".join(parts)
-
 
 def _build_verification_summary(
     verification: VerificationOutput,
@@ -155,7 +149,6 @@ def _build_verification_summary(
             concerns = f" [Concerns: {', '.join(r.concerns)}]" if r.concerns else ""
             lines.append(f"  - {r.claim_id}: {r.reason[:100]} (confidence: {r.confidence}){concerns}")
     return "\n".join(lines)
-
 
 def _fallback_report(request: ReportRequest, reason: str) -> ReportOutput:
     claims = {
@@ -206,8 +199,6 @@ def _fallback_report(request: ReportRequest, reason: str) -> ReportOutput:
         total_sources=len({c.source_url for ar in request.analysis_results for c in ar.claims}),
     )
 
-
-
 async def generate_report(
     request: ReportRequest,
     model: str = "openai/mimo-v2.5-pro",
@@ -249,8 +240,21 @@ async def generate_report(
             all_recommendations.extend(actions)
 
     total_sources = len({c.source_url for ar in request.analysis_results for c in ar.claims})
-    logger.info("Report generated: %d findings, %d comparison tables, %d sources",
-                len(findings), len(draft.comparison_tables), total_sources)
+
+    claim_map = {c.id: c for ar in request.analysis_results for c in ar.claims}
+    verification_map = {vr.claim_id: vr for vr in request.verification_output.results}
+    total_ev = 0.0
+    ev_count = 0
+    for claim_id, claim in claim_map.items():
+        vr = verification_map.get(claim_id)
+        reliability = vr.confidence if vr else 0.5
+        ev = claim.relevance * reliability
+        total_ev += ev
+        ev_count += 1
+    avg_ev = total_ev / ev_count if ev_count else 0.0
+
+    logger.info("Report generated: %d findings, %d comparison tables, %d sources, avg_ev=%.3f",
+                len(findings), len(draft.comparison_tables), total_sources, avg_ev)
 
     return ReportOutput(
         executive_summary=draft.executive_summary, findings=findings,
@@ -258,4 +262,6 @@ async def generate_report(
                           for t in draft.comparison_tables],
         trend_analysis=draft.trend_analysis, recommendations=all_recommendations,
         total_sources=total_sources,
+        total_expected_value=round(total_ev, 3),
+        average_expected_value=round(avg_ev, 3),
     )

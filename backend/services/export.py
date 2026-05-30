@@ -10,7 +10,6 @@ from datetime import datetime, timezone
 
 from contracts.api import ExportFormat, ExportRequest, ExportResponse, IntelligenceReport
 
-
 def export_report(report: IntelligenceReport, request: ExportRequest, job_id: str) -> ExportResponse:
     """Dispatch to the appropriate format exporter."""
     exporters = {
@@ -18,7 +17,6 @@ def export_report(report: IntelligenceReport, request: ExportRequest, job_id: st
         ExportFormat.MARKDOWN: _export_markdown, ExportFormat.PDF: _export_pdf,
     }
     return exporters[request.format](report, request, job_id)
-
 
 def _export_json(report: IntelligenceReport, request: ExportRequest, job_id: str) -> ExportResponse:
     if request.include_raw_data:
@@ -31,7 +29,6 @@ def _export_json(report: IntelligenceReport, request: ExportRequest, job_id: str
         content = IntelligenceReport(**data).model_dump_json(indent=2)
     return ExportResponse(job_id=job_id, format=ExportFormat.JSON, content=content)
 
-
 def _export_csv(report: IntelligenceReport, request: ExportRequest, job_id: str) -> ExportResponse:
     buf = io.StringIO()
     writer = csv.writer(buf)
@@ -40,7 +37,6 @@ def _export_csv(report: IntelligenceReport, request: ExportRequest, job_id: str)
         sources = "; ".join(c.url for c in f.citations) if request.include_citations else ""
         writer.writerow([f.id, f.title, f.category, f.confidence.value, f.impact or "", f.recommendation or "", sources])
     return ExportResponse(job_id=job_id, format=ExportFormat.CSV, content=buf.getvalue())
-
 
 def _export_markdown(report: IntelligenceReport, request: ExportRequest, job_id: str) -> ExportResponse:
     lines: list[str] = [
@@ -83,7 +79,6 @@ def _export_markdown(report: IntelligenceReport, request: ExportRequest, job_id:
         lines.append("")
     lines += ["---", f"*Sources: {report.total_sources} | Verifications: {report.verification_passes}*"]
     return ExportResponse(job_id=job_id, format=ExportFormat.MARKDOWN, content="\n".join(lines))
-
 
 def _export_pdf(report: IntelligenceReport, request: ExportRequest, job_id: str) -> ExportResponse:
     """Generate a PDF using reportlab, falling back to HTML if unavailable."""
@@ -157,7 +152,6 @@ def _export_pdf(report: IntelligenceReport, request: ExportRequest, job_id: str)
         )
 
     return ExportResponse(job_id=job_id, format=ExportFormat.PDF, download_url=f"/data/exports/{filename}")
-
 
 def _build_html(report: IntelligenceReport) -> str:
     """Fallback HTML report for when reportlab is not installed."""

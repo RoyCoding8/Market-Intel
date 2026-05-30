@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-import logging
-import os
-import sys
-import asyncio
-from contextlib import asynccontextmanager
-from pathlib import Path
-from typing import AsyncIterator
-from urllib.parse import unquote
+from dotenv import load_dotenv
+load_dotenv()
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.staticfiles import StaticFiles
+import logging  # noqa: E402
+import os  # noqa: E402
+import sys  # noqa: E402
+import asyncio  # noqa: E402
+from contextlib import asynccontextmanager  # noqa: E402
+from pathlib import Path  # noqa: E402
+from typing import AsyncIterator  # noqa: E402
+from urllib.parse import unquote  # noqa: E402
+
+from fastapi import FastAPI  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from starlette.staticfiles import StaticFiles  # noqa: E402
 
 # Ensure project root is on sys.path so `contracts` and `engine` are importable
 _PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
@@ -39,7 +42,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 def _resolve_pipeline():
     try:
         from engine.pipeline import run_pipeline
@@ -50,14 +52,12 @@ def _resolve_pipeline():
         logger.warning("engine.pipeline not found — using stub")
         return run_pipeline_stub
 
-
 def _database_path_from_env() -> str:
     database_url = os.getenv("DATABASE_URL", "sqlite:///./data/market_intel.db")
     if database_url.startswith("sqlite:///"):
         return unquote(database_url.removeprefix("sqlite:///"))
     logger.warning("Unsupported DATABASE_URL %s; using local SQLite default", database_url)
     return "./data/market_intel.db"
-
 
 def _cors_origins_from_env() -> list[str]:
     raw = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:3001")
@@ -66,7 +66,6 @@ def _cors_origins_from_env() -> list[str]:
         logger.warning("Ignoring wildcard CORS origin; configure explicit origins instead")
         origins = [origin for origin in origins if origin != "*"]
     return origins or ["http://localhost:3000"]
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -109,7 +108,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await database.close()
         logger.info("Application shut down")
 
-
 def create_app(
     *,
     rate_limit_general: int = 100,
@@ -123,15 +121,8 @@ def create_app(
         lifespan=lifespan,
     )
 
-    # ── Middleware stack (outermost first) ─────────────────────────────
-
-    # 1. API-key auth (when API_KEY env var is set)
     app.add_middleware(ApiKeyMiddleware)
-
-    # 2. Request body size limit (default 1 MB)
     app.add_middleware(BodyLimitMiddleware)
-
-    # 3. Rate limiting
     app.add_middleware(
         RateLimitMiddleware,
         general_limit=rate_limit_general,
@@ -139,7 +130,6 @@ def create_app(
         window=rate_limit_window,
     )
 
-    # 4. CORS — controlled by CORS_ORIGINS
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_cors_origins_from_env(),
@@ -148,7 +138,6 @@ def create_app(
         allow_headers=["*"],
     )
 
-    # ── Shared services stored on app.state ───────────────────────────
     app.state.database = Database(_database_path_from_env())
     app.state.job_manager = JobManager(app.state.database)
     app.state.event_store = EventStore()
@@ -165,19 +154,16 @@ def create_app(
     app.state.pipeline_timeout = int(os.getenv("PIPELINE_TIMEOUT_SECONDS", "600"))
     logger.info("Pipeline timeout: %ds", app.state.pipeline_timeout)
 
-    # Routes
     app.include_router(health_router)
     app.include_router(jobs_router)
     app.include_router(analytics_router)
     app.include_router(schedules_router)
 
-    # Static file serving for exported PDFs
     export_dir = os.path.join(".", "data", "exports")
     os.makedirs(export_dir, exist_ok=True)
     app.mount("/data/exports", StaticFiles(directory=export_dir), name="exports")
 
     return app
-
 
 app = create_app()
 

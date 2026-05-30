@@ -24,6 +24,7 @@ Liveness and readiness probe.
   "status": "ok",
   "version": "0.3.0",
   "llm_configured": true,
+  "bright_data_configured": true,
   "scheduler_running": true,
   "active_jobs": 2,
   "total_jobs_completed": 15

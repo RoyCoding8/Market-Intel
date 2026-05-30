@@ -11,7 +11,6 @@ from contracts.api import DashboardStats, TrendDataPoint, TrendResponse
 
 router = APIRouter(tags=["analytics"])
 
-
 @router.get("/api/stats", response_model=DashboardStats)
 async def get_stats(request: Request) -> DashboardStats:
     """Return aggregate dashboard statistics."""
@@ -54,7 +53,6 @@ async def get_stats(request: Request) -> DashboardStats:
         findings_by_category=findings_by_category,
         top_competitors=sorted(competitor_map.values(), key=lambda x: x["job_count"], reverse=True)[:10],
     )
-
 
 @router.get("/api/trends", response_model=TrendResponse)
 async def get_trends(

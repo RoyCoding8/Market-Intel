@@ -18,7 +18,6 @@ from starlette.responses import JSONResponse
 
 _DEFAULT_MAX_BYTES = 1_048_576  # 1 MB
 
-
 class BodyLimitMiddleware(BaseHTTPMiddleware):
     """Return *413 Payload Too Large* when ``Content-Length`` exceeds the cap."""
 

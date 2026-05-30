@@ -29,7 +29,6 @@ from engine.emitter import EventEmitter
 
 logger = logging.getLogger(__name__)
 
-
 def _evt(ctx: PipelineContext, event_type: EventType, agent: str, message: str,
          data: dict | None = None) -> AgentEvent:
     """Create an AgentEvent with consistent metadata."""
@@ -39,12 +38,10 @@ def _evt(ctx: PipelineContext, event_type: EventType, agent: str, message: str,
         message=message, data=data,
     )
 
-
 async def _emit(emitter: EventEmitter, ctx: PipelineContext,
                  event_type: EventType, agent: str, message: str,
                  data: dict | None = None) -> None:
     await emitter.emit(_evt(ctx, event_type, agent, message, data))
-
 
 async def run_pipeline(
     ctx: PipelineContext,
@@ -235,7 +232,6 @@ async def run_pipeline(
     ctx.state = PipelineState.DONE
     await _emit(emitter, ctx, EventType.JOB_COMPLETED, "pipeline", "Pipeline completed")
     return report
-
 
 async def _partial_report(
     ctx: PipelineContext,

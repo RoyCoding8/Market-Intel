@@ -10,7 +10,6 @@ import pytest
 from contracts.events import AgentEvent, EventType
 from backend.services.event_store import EventStore
 
-
 def _make_event(job_id: str, event_type: EventType = EventType.LOG, message: str = "test") -> AgentEvent:
     return AgentEvent(
         event_id=f"ev-{job_id}-{datetime.now(timezone.utc).timestamp()}",
@@ -20,7 +19,6 @@ def _make_event(job_id: str, event_type: EventType = EventType.LOG, message: str
         timestamp=datetime.now(timezone.utc),
         message=message,
     )
-
 
 @pytest.mark.asyncio
 async def test_publish_and_subscribe(event_store: EventStore):
@@ -43,7 +41,6 @@ async def test_publish_and_subscribe(event_store: EventStore):
     assert len(collected) == 1
     assert collected[0].event_id == event.event_id
 
-
 @pytest.mark.asyncio
 async def test_replay_history(event_store: EventStore):
     job_id = "job-replay"
@@ -58,7 +55,6 @@ async def test_replay_history(event_store: EventStore):
     async for ev in event_store.subscribe(job_id):
         collected.append(ev)
     assert len(collected) == 6  # 5 events + terminal
-
 
 @pytest.mark.asyncio
 async def test_replay_from_last_event_id(event_store: EventStore):
@@ -78,7 +74,6 @@ async def test_replay_from_last_event_id(event_store: EventStore):
     assert collected[0].event_id == events[3].event_id
     assert collected[-1].event_type == EventType.JOB_COMPLETED
 
-
 @pytest.mark.asyncio
 async def test_close_job_sends_sentinel(event_store: EventStore):
     job_id = "job-close"
@@ -95,7 +90,6 @@ async def test_close_job_sends_sentinel(event_store: EventStore):
     collected = await asyncio.wait_for(task, timeout=2.0)
     # Subscriber should have ended (empty because no events published)
     assert collected == []
-
 
 @pytest.mark.asyncio
 async def test_close_job_preserves_queued_terminal_event(event_store: EventStore):
@@ -117,7 +111,6 @@ async def test_close_job_preserves_queued_terminal_event(event_store: EventStore
     assert collected[-1].event_id == terminal.event_id
     assert event_store.get_history(job_id)[-1].event_id == terminal.event_id
 
-
 @pytest.mark.asyncio
 async def test_publish_heartbeat(event_store: EventStore):
     job_id = "job-hb"
@@ -136,7 +129,6 @@ async def test_publish_heartbeat(event_store: EventStore):
     collected = await asyncio.wait_for(task, timeout=2.0)
     assert len(collected) == 1
     assert collected[0].event_type == EventType.HEARTBEAT
-
 
 @pytest.mark.asyncio
 async def test_terminal_event_stops_replay(event_store: EventStore):
