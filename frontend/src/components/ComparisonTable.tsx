@@ -24,7 +24,7 @@ export function ComparisonTable({ table, competitors }: ComparisonTableProps) {
         <CardTitle className="text-sm">{table.title}</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
@@ -55,7 +55,7 @@ export function ComparisonTable({ table, competitors }: ComparisonTableProps) {
                     return (
                       <td
                         key={id}
-                        className={`px-5 py-3 ${
+                        className={`px-5 py-3 max-w-xs break-words ${
                           isWinner
                             ? "text-success font-medium"
                             : "text-text-secondary"

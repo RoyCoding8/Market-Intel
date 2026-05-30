@@ -91,7 +91,6 @@ cd backend && uvicorn main:app --host 0.0.0.0 --port 8000
 **Optional extras:**
 
 ```bash
-uv pip install -e ".[aws]"   # AWS Bedrock / SageMaker support (boto3 + botocore)
 uv pip install -e ".[pdf]"   # PDF report export (reportlab)
 ```
 
